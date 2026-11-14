@@ -1,11 +1,12 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { type SubmitEvent, useState } from "react";
+import { type SubmitEvent, useEffect, useRef, useState } from "react";
 
 import { type ProductFilters, SORT_LABELS } from "@/entities/product";
 import { assertNever } from "@/shared/lib";
 
+import { ComparisonTable } from "./comparison-table";
 import { ProductPreviewCard } from "./product-preview-card";
 import type { ChatMessage } from "../api/chat-handler";
 import { describeChatError } from "../model/chat-error";
@@ -13,6 +14,7 @@ import type { FilterResult } from "../model/filter-result";
 
 type MessagePart = ChatMessage["parts"][number];
 type FilterToolPart = Extract<MessagePart, { type: "tool-filterProducts" }>;
+type CompareToolPart = Extract<MessagePart, { type: "tool-compareProducts" }>;
 
 const EXAMPLES = [
   "Laptops under $1500",
@@ -37,6 +39,13 @@ export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
       },
     });
   const busy = status === "submitted" || status === "streaming";
+  const logRef = useRef<HTMLDivElement>(null);
+
+  // Keep the newest message in view as answers stream in.
+  useEffect(() => {
+    const log = logRef.current;
+    if (log) log.scrollTop = log.scrollHeight;
+  }, [messages, status]);
 
   const send = (text: string) => {
     const trimmed = text.trim();
@@ -63,6 +72,7 @@ export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
       </header>
 
       <div
+        ref={logRef}
         role="log"
         aria-live="polite"
         className="flex flex-1 flex-col gap-3 overflow-y-auto p-4"
@@ -88,10 +98,11 @@ export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
             <article
               key={message.id}
               aria-label={message.role === "user" ? "You" : "Assistant"}
-              className={`flex max-w-[90%] flex-col gap-2 rounded-lg px-3 py-2 text-sm ${
+              className={`flex flex-col gap-2 rounded-lg px-3 py-2 text-sm ${
                 message.role === "user"
-                  ? "self-end bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : "self-start bg-zinc-100 dark:bg-zinc-900"
+                  ? "max-w-[90%] self-end bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  : // Full width: tables and card rows need the room.
+                    "w-full min-w-0 self-start bg-zinc-100 dark:bg-zinc-900"
               }`}
             >
               {message.parts.map((part, index) => (
@@ -169,6 +180,8 @@ function MessagePartView({ part }: { readonly part: MessagePart }) {
       return <p className="whitespace-pre-wrap">{part.text}</p>;
     case "tool-filterProducts":
       return <FilterToolView part={part} />;
+    case "tool-compareProducts":
+      return <CompareToolView part={part} />;
     case "step-start":
     case "reasoning":
     case "reasoning-file":
@@ -178,7 +191,7 @@ function MessagePartView({ part }: { readonly part: MessagePart }) {
     case "dynamic-tool":
     case "steering-message":
     case "custom":
-      // This chat streams only text and filterProducts calls; data parts below too.
+      // This chat streams only text and its own tool calls; data parts below too.
       return null;
     default:
       return isDataPart(part) ? null : assertNever(part);
@@ -208,6 +221,29 @@ function FilterToolView({ part }: { readonly part: FilterToolPart }) {
     case "approval-responded":
     case "output-denied":
       // filterProducts needs no approval, so these states never occur.
+      return null;
+    default:
+      return assertNever(part);
+  }
+}
+
+function CompareToolView({ part }: { readonly part: CompareToolPart }) {
+  switch (part.state) {
+    case "input-streaming":
+    case "input-available":
+      return <p className="text-xs text-zinc-500">Comparing products…</p>;
+    case "output-available":
+      return <ComparisonTable comparison={part.output} />;
+    case "output-error":
+      return (
+        <p className="text-xs text-red-600 dark:text-red-400">
+          Could not compare these products.
+        </p>
+      );
+    case "approval-requested":
+    case "approval-responded":
+    case "output-denied":
+      // compareProducts needs no approval, so these states never occur.
       return null;
     default:
       return assertNever(part);
