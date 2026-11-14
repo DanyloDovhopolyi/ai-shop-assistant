@@ -64,10 +64,12 @@ ui/     React components: call model, never api
 Goal: replacing any adapter (data source, LLM provider, search engine) changes one wiring line and breaks nothing else.
 
 - Ports are interfaces in `model`; adapters in `api` implement them.
-- Pass dependencies as factory parameters (`createFilterProductsTool({ search })`). Wire them in one place per route (the composition root).
-- Every adapter of a port passes one shared **contract test suite** (`describeProductSearchContract(makeAdapter)`). A new adapter is accepted when the suite is green.
+- Pass dependencies as factory parameters (`createFilterProductsTool({ catalog })`). Wire them in one place per route (the composition root).
+- Every adapter of a port passes one shared **contract test suite** (`describeProductCatalogContract(name, setup)`). A new adapter is accepted when the suite is green.
 - Slices talk only through public APIs (`index.ts`) and Zod-defined data. Changing a slice's internals never breaks another slice.
-- `ProductSearch` port: DummyJSON adapter now, pgvector adapter (stage 4), keyword fallback (stage 6).
+- `ProductCatalog` port (`entities/product`): lists the whole catalog. Adapters: DummyJSON, in-memory.
+- `ProductSearch` port (stage 4): free-text query to products. Adapters: pgvector, keyword fallback (stage 6).
+- Adapters translate upstream wire formats into domain types (anti-corruption layer): a DTO schema in `api/` maps into the domain schema in `model/`.
 - The LLM is a dependency: `LanguageModel` from the AI SDK, so Gemini swaps for any provider; tests use `MockLanguageModelV4` from `ai/test`.
 
 ## AI SDK
