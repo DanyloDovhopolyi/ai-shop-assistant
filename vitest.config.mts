@@ -31,7 +31,6 @@ export default defineConfig({
         "src/**/*.test.{ts,tsx}",
         "src/**/*.test-d.ts",
         "src/**/*.contract.ts",
-        "src/**/*.fixtures.ts",
       ],
       reporter: ["text", "html", "lcov"],
       // Thresholds guard business logic and adapters only; config and wiring are not worth testing.
