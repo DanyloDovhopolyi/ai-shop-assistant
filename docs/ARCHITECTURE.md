@@ -81,8 +81,11 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 ## Testing (TDD)
 
 - Red → green → refactor. Tests sit next to code as `*.test.ts(x)`.
+- Test what carries risk: business logic in `model/`, adapters (one contract suite per port), infrastructure with real failure modes (`fetchJson`), key UI flows, AI tools with a mock model. Each test proves a behaviour a user or caller depends on.
+- Leave untested: config, thin wrappers over libraries, routing files, styling. A test that only re-checks a library (e.g. Zod rejecting a missing key) adds noise.
+- Coverage thresholds apply to `model/` and `api/` only, so the number reflects the code that matters.
 - Vitest projects pick the environment by extension: `*.test.ts` runs in `unit` (node), `*.test.tsx` runs in `dom` (jsdom + Testing Library + jest-dom).
 - Network: the shared MSW server (`test/msw/server.ts`) has no default handlers; each test declares its network with `server.use()`. Unmocked requests fail (`onUnhandledFrame: "error"`). Import handlers from `msw/http`.
 - Test behaviour through the public API; assert outcomes, not calls.
 - Keep async Server Components thin: their logic is pure functions tested directly.
-- Type-level guarantees (e.g. `ProductId` brand) get a `*.test-d.ts` with `@ts-expect-error`.
+- Type-level guarantees (e.g. `ProductId` brand) are proven with `@ts-expect-error`; `typecheck` fails if the forbidden code starts compiling.
