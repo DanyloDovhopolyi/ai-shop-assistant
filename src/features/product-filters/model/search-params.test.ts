@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { DEFAULT_FILTERS, type ProductFilters } from "./product-filters";
 import {
+  catalogHref,
   filtersFromSearchParams,
   filtersToSearchParams,
+  pageFromSearchParams,
 } from "./search-params";
 
 describe("filtersFromSearchParams", () => {
@@ -74,5 +76,37 @@ describe("filtersToSearchParams", () => {
     const params = Object.fromEntries(filtersToSearchParams(filters));
 
     expect(filtersFromSearchParams(params)).toEqual(filters);
+  });
+});
+
+describe("pageFromSearchParams", () => {
+  it.each([
+    ["missing", undefined, 1],
+    ["valid", "3", 3],
+    ["zero", "0", 1],
+    ["negative", "-2", 1],
+    ["fractional", "2.5", 1],
+    ["not a number", "two", 1],
+  ])("reads a %s page", (_case, value, expected) => {
+    expect(pageFromSearchParams({ page: value })).toBe(expected);
+  });
+});
+
+describe("catalogHref", () => {
+  const filters: ProductFilters = { ...DEFAULT_FILTERS, category: "laptops" };
+
+  it("keeps the filters when moving between pages", () => {
+    expect(catalogHref(filters, 2)).toBe("?category=laptops&page=2");
+  });
+
+  it("leaves the first page out of the URL", () => {
+    expect(catalogHref(filters, 1)).toBe("?category=laptops");
+  });
+
+  it("starts from the first page whenever filters change", () => {
+    // Filter changes serialise filters only, so a stale page can never survive them.
+    expect(
+      filtersToSearchParams({ ...filters, minRating: 4 }).has("page"),
+    ).toBe(false);
   });
 });

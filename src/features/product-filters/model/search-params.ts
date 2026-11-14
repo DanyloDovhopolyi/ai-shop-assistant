@@ -67,3 +67,23 @@ function withoutUndefined<T extends object>(value: T): Partial<T> {
     Object.entries(value).filter(([, entry]) => entry !== undefined),
   ) as Partial<T>;
 }
+
+export const CATALOG_PAGE_SIZE = 24;
+
+const PageSchema = z.coerce.number().int().min(1).catch(1);
+
+/** 1-based page from the URL; anything invalid means the first page. */
+export function pageFromSearchParams(params: SearchParamsRecord): number {
+  return PageSchema.parse(firstNonEmpty(params.page) ?? 1);
+}
+
+/**
+ * Query string for a page of filtered results. Page 1 is left out so the
+ * canonical URL of a filter set has no page parameter.
+ */
+export function catalogHref(filters: ProductFilters, page: number): string {
+  const params = filtersToSearchParams(filters);
+  if (page > 1) params.set("page", String(page));
+  const query = params.toString();
+  return query ? `?${query}` : "?";
+}
