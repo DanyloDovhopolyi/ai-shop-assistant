@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import { InvalidResponseError } from "@/shared/api";
 
-import { server } from "../../../../test/msw/server";
-import type { Product } from "../model/product";
-import { makeProduct } from "../model/product.fixtures";
+import { server } from "@test/msw/server";
 
 import { createDummyJsonProductCatalog } from "./dummyjson-product-catalog";
 import { describeProductCatalogContract } from "./product-catalog.contract";
+import type { Product } from "../model/product";
+import { makeProduct } from "../model/product.fixtures";
 
 const BASE_URL = "https://dummyjson.test";
 

@@ -4,6 +4,13 @@ import nextTs from "eslint-config-next/typescript";
 import prettier from "eslint-config-prettier/flat";
 import tseslint from "typescript-eslint";
 
+// Relative imports stay inside a slice (`./`, `../model`). Anything further uses an alias.
+const leaveSliceByAlias = {
+  group: ["../../*"],
+  message:
+    "Import across slices or into test/ through an alias: @/<layer>/<slice> or @test/*.",
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -23,6 +30,27 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/switch-exhaustiveness-check": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/consistent-type-exports": "error",
+      "no-restricted-imports": ["error", { patterns: [leaveSliceByAlias] }],
+      // Catches a slice importing its own public API (index.ts), which is a cycle.
+      "import/no-cycle": "error",
+      "import/order": [
+        "error",
+        {
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            ["parent", "sibling", "index"],
+          ],
+          pathGroups: [
+            { pattern: "@/**", group: "internal" },
+            { pattern: "@test/**", group: "internal", position: "after" },
+          ],
+          pathGroupsExcludedImportTypes: ["builtin"],
+          "newlines-between": "always",
+          alphabetize: { order: "asc", caseInsensitive: true },
+        },
+      ],
     },
   },
   {
@@ -33,6 +61,7 @@ const eslintConfig = defineConfig([
         "error",
         {
           patterns: [
+            leaveSliceByAlias,
             {
               group: [
                 "react",
@@ -64,6 +93,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "coverage/**",
+    ".vitest/**",
     "next-env.d.ts",
   ]),
 ]);

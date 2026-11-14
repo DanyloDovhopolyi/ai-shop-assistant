@@ -16,6 +16,7 @@ src/
 
 - Imports go down only: `app → features → entities → shared`. Slices on one layer do not import each other. Steiger (`npm run lint:fsd`) enforces layers and public APIs in CI.
 - Import a slice only through its `index.ts`.
+- Aliases: `@/*` → `src/*`, `@test/*` → `test/*`. Relative paths stay inside one slice (`./`, `../model`); anything further uses an alias (ESLint enforces it, and `import/no-cycle` catches a slice importing its own `index.ts`). `import/order` sorts imports: packages, `@/`, `@test/`, relative.
 - Server-only modules start with `import "server-only"`.
 
 ### Layers inside a slice

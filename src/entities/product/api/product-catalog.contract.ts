@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { AbortedError } from "@/shared/api";
 
 import type { Product } from "../model/product";
-import { makeProduct } from "../model/product.fixtures";
 import type { ProductCatalog } from "../model/product-catalog";
+import { makeProduct } from "../model/product.fixtures";
 
 /**
  * Behaviour every ProductCatalog adapter must share. Each adapter's test file
