@@ -4,6 +4,7 @@ export {
 } from "./api/dummyjson-product-catalog";
 export { createInMemoryProductCatalog } from "./api/in-memory-product-catalog";
 export {
+  listCategories,
   type Product,
   type ProductId,
   ProductIdSchema,

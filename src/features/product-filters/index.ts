@@ -12,3 +12,8 @@ export {
   filtersToSearchParams,
   type SearchParamsRecord,
 } from "./model/search-params";
+export {
+  FiltersNavigationProvider,
+  FiltersPendingRegion,
+  UrlFiltersPanel,
+} from "./ui/filters-navigation";

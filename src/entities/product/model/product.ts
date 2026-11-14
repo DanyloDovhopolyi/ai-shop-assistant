@@ -14,3 +14,10 @@ export const ProductSchema = z.object({
   imageUrl: z.url(),
 });
 export type Product = z.infer<typeof ProductSchema>;
+
+/** Distinct categories present in the catalog, alphabetically. */
+export function listCategories(
+  products: readonly Product[],
+): readonly string[] {
+  return [...new Set(products.map((product) => product.category))].sort();
+}
