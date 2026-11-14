@@ -27,7 +27,12 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/**/*.test-d.ts"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.test-d.ts",
+        "src/**/*.contract.ts",
+        "src/**/*.fixtures.ts",
+      ],
       reporter: ["text", "html", "lcov"],
       // Thresholds guard business logic and adapters only; config and wiring are not worth testing.
       thresholds: {

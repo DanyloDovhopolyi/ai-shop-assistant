@@ -12,7 +12,7 @@ import {
 
 export interface FetchJsonOptions {
   /** Caller cancellation. Aborting stops the request and any pending retry. */
-  readonly signal?: AbortSignal;
+  readonly signal?: AbortSignal | undefined;
   /** Per-attempt timeout. */
   readonly timeoutMs?: number;
   /** Extra attempts for idempotent requests on transient failures. */
