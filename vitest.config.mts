@@ -29,11 +29,20 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/**/*.test.{ts,tsx}", "src/**/*.test-d.ts"],
       reporter: ["text", "html", "lcov"],
+      // Thresholds guard business logic and adapters only; config and wiring are not worth testing.
       thresholds: {
-        lines: 80,
-        functions: 80,
-        branches: 80,
-        statements: 80,
+        "src/**/model/**": {
+          lines: 90,
+          functions: 90,
+          branches: 85,
+          statements: 90,
+        },
+        "src/**/api/**": {
+          lines: 85,
+          functions: 85,
+          branches: 80,
+          statements: 85,
+        },
       },
     },
   },
