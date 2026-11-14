@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_FILTERS, type ProductFilters } from "./product-filters";
+import { DEFAULT_FILTERS, type ProductFilters } from "@/entities/product";
+
 import {
   catalogHref,
   filtersFromSearchParams,

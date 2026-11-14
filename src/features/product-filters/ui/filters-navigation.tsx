@@ -3,8 +3,9 @@
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, type ReactNode, use, useTransition } from "react";
 
+import type { ProductFilters } from "@/entities/product";
+
 import { FiltersPanel, type FiltersPanelProps } from "./filters-panel";
-import type { ProductFilters } from "../model/product-filters";
 import { filtersToSearchParams } from "../model/search-params";
 
 interface FiltersNavigation {

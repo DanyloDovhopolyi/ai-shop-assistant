@@ -5,7 +5,7 @@ import {
   type ProductFilters,
   ProductFiltersSchema,
   SortOrderSchema,
-} from "./product-filters";
+} from "@/entities/product";
 
 /** Shape of Next.js `searchParams`: a key may be missing, single, or repeated. */
 export type SearchParamsRecord = Readonly<

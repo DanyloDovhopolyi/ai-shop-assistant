@@ -2,12 +2,12 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import {
+  applyFilters,
   listCategories,
   ProductGrid,
   ProductGridSkeleton,
 } from "@/entities/product";
 import {
-  applyFilters,
   CATALOG_PAGE_SIZE,
   CatalogPagination,
   filtersFromSearchParams,
