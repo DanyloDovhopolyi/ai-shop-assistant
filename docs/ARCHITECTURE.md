@@ -16,8 +16,19 @@ src/
 
 - Imports go down only: `app → features → entities → shared`. Slices on one layer do not import each other.
 - Import a slice only through its `index.ts`.
-- Segments: `ui`, `model` (schemas, types, logic), `api` (network, adapters), `lib`, `config`.
 - Server-only modules start with `import "server-only"`.
+
+### Layers inside a slice
+
+```
+model/  business logic: schemas, pure functions, ports (interfaces it needs)
+api/    adapters: implement model's ports (HTTP, DB, LLM)
+ui/     React components: call model, never api
+```
+
+- Dependencies point at `model`: `ui → model ← api`.
+- `model` imports only `zod` and `shared/lib`. React, Next, `fetch`, and SDKs live outside it (ESLint `no-restricted-imports` enforces this).
+- `model` declares what it needs as a port; it never knows which adapter fills it.
 - Add `widgets` / `_pages` layers when a second page or real reuse appears.
 
 ## Rendering
@@ -47,12 +58,16 @@ src/
   - retries GET only, on `network` / `timeout` / 5xx / 429, with exponential backoff + jitter.
 - Env is validated with Zod in `shared/config/env.ts` (server-only).
 
-## Dependency injection
+## Dependency injection and substitutability
 
-- Ports are interfaces in `model`; adapters live in `api`.
-- Pass dependencies as factory parameters (`createFilterProductsTool({ search })`). Wire them in route files.
+Goal: replacing any adapter (data source, LLM provider, search engine) changes one wiring line and breaks nothing else.
+
+- Ports are interfaces in `model`; adapters in `api` implement them.
+- Pass dependencies as factory parameters (`createFilterProductsTool({ search })`). Wire them in one place per route (the composition root).
+- Every adapter of a port passes one shared **contract test suite** (`describeProductSearchContract(makeAdapter)`). A new adapter is accepted when the suite is green.
+- Slices talk only through public APIs (`index.ts`) and Zod-defined data. Changing a slice's internals never breaks another slice.
 - `ProductSearch` port: DummyJSON adapter now, pgvector adapter (stage 4), keyword fallback (stage 6).
-- The LLM is a dependency too; tests use `MockLanguageModelV4` from `ai/test`.
+- The LLM is a dependency: `LanguageModel` from the AI SDK, so Gemini swaps for any provider; tests use `MockLanguageModelV4` from `ai/test`.
 
 ## AI SDK
 
