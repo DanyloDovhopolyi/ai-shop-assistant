@@ -23,7 +23,7 @@ Read `docs/ARCHITECTURE.md` before writing or changing any code. It defines the 
 ## Roadmap
 
 0. **Foundation**: strict TS + typed ESLint → Vitest + MSW → folder structure → `fetchJson` (TDD) + env validation.
-1. **Catalog**: product grid, manual filters (category, price, rating, sort) in the URL.
+1. **Catalog**: product grid, manual filters (category, price, rating, sort) and pagination, all in the URL.
 2. **AI chat with tool calling**: `filterProducts` tool shares the `ProductFilters` schema; the model fills it, the grid updates; streamed response.
 3. **Generative UI**: product cards and a comparison table rendered in the chat; card details via TanStack Query, sharing cache by product id.
 4. **Semantic search**: embeddings of product descriptions + pgvector (Supabase or Neon) for queries like "winter gift"; search suggestions while typing via TanStack Query (debounce, cancellation, `keepPreviousData`).
