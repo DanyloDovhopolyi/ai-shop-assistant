@@ -7,7 +7,9 @@ import { ConfigError, getServerEnv } from "@/shared/config";
 import { getCatalog } from "../../_lib/catalog";
 
 // Composition root for the chat: picks the model and reuses the cached catalog.
-const CHAT_MODEL_ID = "gemini-2.5-flash";
+// Fast, GA, and accurate on tool calls in a live comparison (see PR). Larger flash models
+// took 11-24s per tool call or timed out.
+const CHAT_MODEL_ID = "gemini-3.1-flash-lite";
 const catalog: ProductCatalog = { list: () => getCatalog() };
 
 export async function POST(request: Request): Promise<Response> {
