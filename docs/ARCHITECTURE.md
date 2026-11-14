@@ -80,8 +80,8 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 ## Testing (TDD)
 
 - Red → green → refactor. Tests sit next to code as `*.test.ts(x)`.
-- Vitest projects: `unit` (node) for logic and adapters, `dom` (jsdom) for components.
-- Network: MSW with `onUnhandledFrame: "error"`; reset handlers after each test.
+- Vitest projects pick the environment by extension: `*.test.ts` runs in `unit` (node), `*.test.tsx` runs in `dom` (jsdom + Testing Library + jest-dom).
+- Network: the shared MSW server (`test/msw/server.ts`) has no default handlers; each test declares its network with `server.use()`. Unmocked requests fail (`onUnhandledFrame: "error"`). Import handlers from `msw/http`.
 - Test behaviour through the public API; assert outcomes, not calls.
 - Keep async Server Components thin: their logic is pure functions tested directly.
 - Type-level guarantees (e.g. `ProductId` brand) get a `*.test-d.ts` with `@ts-expect-error`.
