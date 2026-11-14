@@ -8,11 +8,15 @@ import {
 } from "@/entities/product";
 import {
   applyFilters,
+  CATALOG_PAGE_SIZE,
+  CatalogPagination,
   filtersFromSearchParams,
   FiltersNavigationProvider,
   FiltersPendingRegion,
+  pageFromSearchParams,
   UrlFiltersPanel,
 } from "@/features/product-filters";
+import { paginate } from "@/shared/lib";
 
 import { getCatalog } from "./_lib/catalog";
 
@@ -36,15 +40,20 @@ async function FilteredCatalog({
   // Await request data first: prerendering stops here, so the build never calls the
   // upstream API and a DummyJSON outage cannot fail a deploy. The catalog is fetched
   // and cached on the first request instead.
-  const filters = filtersFromSearchParams(await searchParams);
+  const params = await searchParams;
+  const filters = filtersFromSearchParams(params);
   const catalog = await getCatalog();
-  const products = applyFilters(catalog, filters);
+  const results = paginate(
+    applyFilters(catalog, filters),
+    pageFromSearchParams(params),
+    CATALOG_PAGE_SIZE,
+  );
 
   return (
     <>
       <UrlFiltersPanel filters={filters} categories={listCategories(catalog)} />
       <FiltersPendingRegion>
-        {products.length === 0 ? (
+        {results.total === 0 ? (
           <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
             <p className="font-medium">No products match these filters.</p>
             <Link href="/" className="mt-2 inline-block text-sm underline">
@@ -54,9 +63,16 @@ async function FilteredCatalog({
         ) : (
           <>
             <p className="mb-4 text-sm text-zinc-500">
-              {products.length} products
+              Showing {results.firstIndex + 1}–
+              {results.firstIndex + results.items.length} of {results.total}{" "}
+              products
             </p>
-            <ProductGrid products={products} />
+            <ProductGrid products={results.items} />
+            <CatalogPagination
+              filters={filters}
+              page={results.page}
+              pageCount={results.pageCount}
+            />
           </>
         )}
       </FiltersPendingRegion>
