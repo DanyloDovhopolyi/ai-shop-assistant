@@ -76,10 +76,11 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 
 ## AI SDK
 
-- One `ProductFilters` schema serves the UI controls, URL parsing, and the `filterProducts` tool `inputSchema`.
-- Tool set declared with `satisfies ToolSet`; message type `UIMessage<never, UIDataTypes, InferUITools<typeof tools>>`.
+- One `ProductFilters` schema (`entities/product`) serves the UI controls, URL parsing, and the `filterProducts` tool `inputSchema`, so invalid model input is rejected by the domain contract.
+- Tool logic is a pure function in `model/` (`toFilterResult`); the `tool()` wrapper in `api/` only adds I/O. The message type is `ChatMessage = UIMessage<never, UIDataTypes, InferUITools<tools>>`.
+- `createChatHandler({ model, catalog })` is framework-agnostic (Request in, stream out) and tested with `MockLanguageModelV4`; `app/api/chat/route.ts` only wires the real model and checks the API key per request (503 when missing).
 - Render tool parts by `part.type` then `part.state`, exhaustively.
-- Route handler: pass `req.signal` to `streamText`, cap steps with `stopWhen`, return `createUIMessageStreamResponse`.
+- Route handler: validate messages with `safeValidateUIMessages` (400 on failure), pass `instructions` (`system` is deprecated in AI SDK 7), pass `request.signal` as `abortSignal`, cap steps with `stopWhen: isStepCount(n)`, return `createUIMessageStreamResponse`.
 - Client: expose `stop()`; on `error`, offer `regenerate()`; show 429 distinctly.
 
 ## Testing (TDD)
