@@ -10,3 +10,5 @@ export {
   ProductSchema,
 } from "./model/product";
 export type { ProductCatalog } from "./model/product-catalog";
+export { ProductCard } from "./ui/product-card";
+export { ProductGrid, ProductGridSkeleton } from "./ui/product-grid";
