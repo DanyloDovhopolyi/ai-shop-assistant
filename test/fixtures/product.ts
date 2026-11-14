@@ -1,4 +1,4 @@
-import { type Product, ProductSchema } from "./product";
+import { type Product, ProductSchema } from "@/entities/product";
 
 /** Builds a valid domain product for tests; override only what the test is about. */
 export function makeProduct(

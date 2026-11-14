@@ -88,6 +88,7 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 - Leave untested: config, thin wrappers over libraries, routing files, styling. A test that only re-checks a library (e.g. Zod rejecting a missing key) adds noise.
 - Coverage thresholds apply to `model/` and `api/` only, so the number reflects the code that matters.
 - Vitest projects pick the environment by extension: `*.test.ts` runs in `unit` (node), `*.test.tsx` runs in `dom` (jsdom + Testing Library + jest-dom).
+- Test builders (`makeProduct`) live in `test/fixtures/`, use only slices' public APIs, and are imported as `@test/fixtures/*`. Steiger forbids side entry points such as `@/entities/product/testing`.
 - Network: the shared MSW server (`test/msw/server.ts`) has no default handlers; each test declares its network with `server.use()`. Unmocked requests fail (`onUnhandledFrame: "error"`). Import handlers from `msw/http`.
 - Test behaviour through the public API; assert outcomes, not calls.
 - Keep async Server Components thin: their logic is pure functions tested directly.
