@@ -32,7 +32,8 @@ Read `docs/ARCHITECTURE.md` before writing or changing any code. It defines the 
 
 ## Workflow
 
-- One small step per turn, one commit per step (Conventional Commits).
+- Branches: `main` (releases) ← `dev` (integration) ← `feat/*`, `fix/*`, `chore/*`, `docs/*`, `test/*` branched from `dev`.
+- One small step per turn, one commit per step (Conventional Commits). Merge into `dev` through a PR with green CI.
 - After each step: stop, summarize what changed, wait for the user's "далі".
 - Explain key decisions briefly; the user must be able to defend them in an interview.
 - Propose anything outside this roadmap and wait for approval before adding it.
