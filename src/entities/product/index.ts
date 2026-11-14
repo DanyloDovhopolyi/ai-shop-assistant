@@ -18,6 +18,7 @@ export {
   DEFAULT_FILTERS,
   type ProductFilters,
   ProductFiltersSchema,
+  SORT_LABELS,
   SORT_ORDERS,
   type SortOrder,
   SortOrderSchema,

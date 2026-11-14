@@ -1,5 +1,6 @@
+import { APICallError } from "ai";
 import { MockLanguageModelV4, mockValues } from "ai/test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createInMemoryProductCatalog } from "@/entities/product";
 
@@ -103,6 +104,29 @@ describe("chat handler", () => {
     await response.text().catch(() => undefined);
 
     expect(model.doStreamCalls[0]?.abortSignal?.aborted).toBe(true);
+  });
+
+  it("reports a provider rate limit as a code the client can show", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const model = new MockLanguageModelV4({
+      doStream: () =>
+        Promise.reject(
+          new APICallError({
+            message: "Quota exceeded for key AIza-secret",
+            url: "https://provider.example",
+            requestBodyValues: {},
+            statusCode: 429,
+            isRetryable: false,
+          }),
+        ),
+    });
+
+    const chunks = await readUiChunks(
+      await createChatHandler({ model, catalog })(chatRequest("hi")),
+    );
+
+    expect(chunks).toContainEqual({ type: "error", errorText: "rate-limited" });
+    expect(JSON.stringify(chunks)).not.toContain("AIza");
   });
 
   it("rejects a malformed request with 400", async () => {

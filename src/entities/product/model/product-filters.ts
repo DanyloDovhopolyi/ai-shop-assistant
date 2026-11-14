@@ -14,6 +14,14 @@ export const SortOrderSchema = z
   );
 export type SortOrder = z.infer<typeof SortOrderSchema>;
 
+/** Human-readable sort names, shared by the filter controls and the chat. */
+export const SORT_LABELS = {
+  featured: "Featured",
+  "price-asc": "Price: low to high",
+  "price-desc": "Price: high to low",
+  "rating-desc": "Best rated",
+} as const satisfies Record<SortOrder, string>;
+
 const PriceSchema = z.number().nonnegative();
 
 /**

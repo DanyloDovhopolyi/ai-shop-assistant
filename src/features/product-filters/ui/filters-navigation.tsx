@@ -44,7 +44,8 @@ export function FiltersNavigationProvider({
   );
 }
 
-function useFiltersNavigation(): FiltersNavigation {
+/** Filter navigation for controls outside this slice, e.g. the AI chat. */
+export function useFiltersNavigation(): FiltersNavigation {
   const navigation = use(FiltersNavigationContext);
   if (!navigation)
     throw new Error("Wrap filter controls in <FiltersNavigationProvider>.");
