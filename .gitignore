@@ -43,3 +43,6 @@ next-env.d.ts
 # editor and agent tooling
 .idea/
 .playwright-mcp/
+
+# env templates are documentation, not secrets
+!.env.example
