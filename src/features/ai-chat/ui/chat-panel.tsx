@@ -6,6 +6,7 @@ import { type SubmitEvent, useState } from "react";
 import { type ProductFilters, SORT_LABELS } from "@/entities/product";
 import { assertNever } from "@/shared/lib";
 
+import { ProductPreviewCard } from "./product-preview-card";
 import type { ChatMessage } from "../api/chat-handler";
 import { describeChatError } from "../model/chat-error";
 import type { FilterResult } from "../model/filter-result";
@@ -223,18 +224,32 @@ function FilterSummary({ result }: { readonly result: FilterResult }) {
   ].filter((chip) => chip !== undefined);
 
   return (
-    <div className="flex flex-wrap items-center gap-1 text-xs">
-      <span className="text-zinc-500">
-        {result.total} {result.total === 1 ? "product" : "products"}
-      </span>
-      {chips.map((chip) => (
-        <span
-          key={chip}
-          className="rounded-full bg-white px-2 py-0.5 dark:bg-zinc-800"
-        >
-          {chip}
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1 text-xs">
+        <span className="text-zinc-500">
+          {result.total} {result.total === 1 ? "product" : "products"}
         </span>
-      ))}
+        {chips.map((chip) => (
+          <span
+            key={chip}
+            className="rounded-full bg-white px-2 py-0.5 dark:bg-zinc-800"
+          >
+            {chip}
+          </span>
+        ))}
+      </div>
+      {result.preview.length > 0 && (
+        <ul
+          aria-label="Top matches"
+          className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+        >
+          {result.preview.map((product) => (
+            <li key={product.id}>
+              <ProductPreviewCard product={product} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
