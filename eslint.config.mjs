@@ -30,6 +30,11 @@ const eslintConfig = defineConfig([
       "@typescript-eslint/switch-exhaustiveness-check": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/consistent-type-exports": "error",
+      // Omitting a key via rest (`const { a: _a, ...rest } = obj`) is idiomatic.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { ignoreRestSiblings: true, argsIgnorePattern: "^_" },
+      ],
       "no-restricted-imports": ["error", { patterns: [leaveSliceByAlias] }],
       // Catches a slice importing its own public API (index.ts), which is a cycle.
       "import/no-cycle": "error",
