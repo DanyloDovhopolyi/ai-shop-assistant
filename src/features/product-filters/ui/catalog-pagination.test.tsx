@@ -1,8 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_FILTERS } from "@/entities/product";
+
 import { CatalogPagination } from "./catalog-pagination";
-import { DEFAULT_FILTERS } from "../model/product-filters";
 
 const filters = { ...DEFAULT_FILTERS, category: "laptops" };
 

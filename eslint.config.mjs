@@ -35,7 +35,6 @@ const eslintConfig = defineConfig([
         "error",
         { ignoreRestSiblings: true, argsIgnorePattern: "^_" },
       ],
-      "no-restricted-imports": ["error", { patterns: [leaveSliceByAlias] }],
       // Catches a slice importing its own public API (index.ts), which is a cycle.
       "import/no-cycle": "error",
       "import/order": [
@@ -56,6 +55,13 @@ const eslintConfig = defineConfig([
           alphabetize: { order: "asc", caseInsensitive: true },
         },
       ],
+    },
+  },
+  {
+    // Slices live in src/; app/ is routing outside FSD and may import its own _lib relatively.
+    files: ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", { patterns: [leaveSliceByAlias] }],
     },
   },
   {

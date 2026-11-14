@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import type { ProductFilters } from "../model/product-filters";
+import type { ProductFilters } from "@/entities/product";
+
 import { catalogHref } from "../model/search-params";
 
 export interface CatalogPaginationProps {

@@ -5,7 +5,7 @@ import {
   type ProductFilters,
   SORT_ORDERS,
   type SortOrder,
-} from "../model/product-filters";
+} from "@/entities/product";
 
 const SORT_LABELS = {
   featured: "Featured",

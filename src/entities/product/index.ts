@@ -13,3 +13,12 @@ export {
 export type { ProductCatalog } from "./model/product-catalog";
 export { ProductCard } from "./ui/product-card";
 export { ProductGrid, ProductGridSkeleton } from "./ui/product-grid";
+export { applyFilters } from "./model/apply-filters";
+export {
+  DEFAULT_FILTERS,
+  type ProductFilters,
+  ProductFiltersSchema,
+  SORT_ORDERS,
+  type SortOrder,
+  SortOrderSchema,
+} from "./model/product-filters";

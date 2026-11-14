@@ -1,6 +1,6 @@
-import type { Product } from "@/entities/product";
 import { assertNever } from "@/shared/lib";
 
+import type { Product } from "./product";
 import type { ProductFilters, SortOrder } from "./product-filters";
 
 type Comparator = (a: Product, b: Product) => number;

@@ -2,8 +2,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { DEFAULT_FILTERS, type ProductFilters } from "@/entities/product";
+
 import { FiltersPanel } from "./filters-panel";
-import { DEFAULT_FILTERS, type ProductFilters } from "../model/product-filters";
 
 const categories = ["laptops", "mobile-accessories", "smartphones"];
 
