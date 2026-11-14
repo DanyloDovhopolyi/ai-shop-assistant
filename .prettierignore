@@ -1,0 +1,7 @@
+.next
+out
+build
+coverage
+.idea
+package-lock.json
+next-env.d.ts
