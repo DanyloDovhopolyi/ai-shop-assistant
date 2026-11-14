@@ -2,12 +2,19 @@ import type { SubmitEvent } from "react";
 
 import {
   DEFAULT_FILTERS,
+  formatCategory,
   type ProductFilters,
   SORT_LABELS,
   SORT_ORDERS,
 } from "@/entities/product";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
+
+import type { FilterKey } from "../model/assistant-filters";
 
 const RATING_OPTIONS = [3, 4, 4.5] as const;
+const NO_KEYS: ReadonlySet<FilterKey> = new Set();
 
 type PriceKey = "minPrice" | "maxPrice";
 
@@ -15,6 +22,8 @@ export interface FiltersPanelProps {
   readonly filters: ProductFilters;
   readonly categories: readonly string[];
   readonly onChange: (next: ProductFilters) => void;
+  /** Filters that still hold the value the assistant chose. */
+  readonly assistantKeys?: ReadonlySet<FilterKey>;
 }
 
 /**
@@ -25,6 +34,7 @@ export function FiltersPanel({
   filters,
   categories,
   onChange,
+  assistantKeys = NO_KEYS,
 }: FiltersPanelProps) {
   const change = <K extends keyof ProductFilters>(
     key: K,
@@ -49,30 +59,39 @@ export function FiltersPanel({
     if (!sameFilters(next, filters)) onChange(next);
   };
 
+  const byAssistant = (key: FilterKey) => assistantKeys.has(key);
+  const describedBy = (key: FilterKey) =>
+    byAssistant(key) ? ASSISTANT_LEGEND_ID : undefined;
+
   return (
     <form
-      // Re-mount when filters change from outside (URL, AI chat) so fields show them.
+      // Remount when filters change from outside (URL, assistant) so uncontrolled
+      // price inputs show the new values.
       key={JSON.stringify(filters)}
       aria-label="Product filters"
       onSubmit={submitPrices}
-      className="mb-6 flex flex-wrap items-end gap-3 rounded-xl border border-zinc-200 p-3 text-sm dark:border-zinc-800"
+      className="flex flex-wrap items-end gap-x-3 gap-y-3"
     >
-      <Field label="Category" htmlFor="filter-category">
-        <select
+      <Field
+        label="Category"
+        htmlFor="filter-category"
+        byAssistant={byAssistant("category")}
+      >
+        <NativeSelect
           id="filter-category"
-          className={controlClassName}
+          aria-describedby={describedBy("category")}
           value={filters.category ?? ""}
           onChange={(event) => {
             change("category", event.target.value || undefined);
           }}
         >
-          <option value="">All categories</option>
+          <NativeSelectOption value="">All categories</NativeSelectOption>
           {categories.map((category) => (
-            <option key={category} value={category}>
+            <NativeSelectOption key={category} value={category}>
               {formatCategory(category)}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
       </Field>
 
       {(["minPrice", "maxPrice"] as const).map((key) => (
@@ -80,8 +99,9 @@ export function FiltersPanel({
           key={key}
           label={key === "minPrice" ? "Min price" : "Max price"}
           htmlFor={`filter-${key}`}
+          byAssistant={byAssistant(key)}
         >
-          <input
+          <Input
             id={`filter-${key}`}
             name={key}
             type="number"
@@ -89,19 +109,24 @@ export function FiltersPanel({
             min={0}
             step="any"
             placeholder="$"
+            aria-describedby={describedBy(key)}
             defaultValue={filters[key] ?? ""}
             onBlur={(event) => {
               commitPrice(key, event.target.value);
             }}
-            className={`${controlClassName} w-24`}
+            className="w-24 tabular-nums"
           />
         </Field>
       ))}
 
-      <Field label="Minimum rating" htmlFor="filter-rating">
-        <select
+      <Field
+        label="Minimum rating"
+        htmlFor="filter-rating"
+        byAssistant={byAssistant("minRating")}
+      >
+        <NativeSelect
           id="filter-rating"
-          className={controlClassName}
+          aria-describedby={describedBy("minRating")}
           value={filters.minRating ?? ""}
           onChange={(event) => {
             change(
@@ -110,19 +135,23 @@ export function FiltersPanel({
             );
           }}
         >
-          <option value="">Any rating</option>
+          <NativeSelectOption value="">Any rating</NativeSelectOption>
           {RATING_OPTIONS.map((rating) => (
-            <option key={rating} value={rating}>
+            <NativeSelectOption key={rating} value={rating}>
               {rating}+ stars
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
       </Field>
 
-      <Field label="Sort by" htmlFor="filter-sort">
-        <select
+      <Field
+        label="Sort by"
+        htmlFor="filter-sort"
+        byAssistant={byAssistant("sort")}
+      >
+        <NativeSelect
           id="filter-sort"
-          className={controlClassName}
+          aria-describedby={describedBy("sort")}
           value={filters.sort}
           onChange={(event) => {
             change(
@@ -132,46 +161,70 @@ export function FiltersPanel({
           }}
         >
           {SORT_ORDERS.map((order) => (
-            <option key={order} value={order}>
+            <NativeSelectOption key={order} value={order}>
               {SORT_LABELS[order]}
-            </option>
+            </NativeSelectOption>
           ))}
-        </select>
+        </NativeSelect>
       </Field>
 
       {/* Lets Enter in a price field submit the form. */}
       <button type="submit" hidden />
-      <button
-        type="button"
-        onClick={() => {
-          onChange(DEFAULT_FILTERS);
-        }}
-        className="ml-auto rounded-md px-3 py-2 text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-400"
-      >
-        Reset filters
-      </button>
+      <div className="ml-auto flex items-center gap-3">
+        {assistantKeys.size > 0 && (
+          <p
+            id={ASSISTANT_LEGEND_ID}
+            className="flex items-center gap-1.5 text-xs text-assistant"
+          >
+            <span aria-hidden className="size-2 rounded-full bg-assistant" />
+            Set by the assistant
+          </p>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            onChange(DEFAULT_FILTERS);
+          }}
+        >
+          Reset filters
+        </Button>
+      </div>
     </form>
   );
 }
 
-const controlClassName =
-  "rounded-md border border-zinc-300 bg-white px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900";
+const ASSISTANT_LEGEND_ID = "filters-assistant-legend";
 
+/**
+ * A labelled control. Filters the assistant set wear its colour, so the user
+ * can see at a glance what the assistant changed and what they chose.
+ */
 function Field({
   label,
   htmlFor,
+  byAssistant,
   children,
 }: {
   readonly label: string;
   readonly htmlFor: string;
+  readonly byAssistant: boolean;
   readonly children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={htmlFor} className="text-xs text-zinc-500">
+    <div
+      data-by-assistant={byAssistant || undefined}
+      className="group flex flex-col gap-1"
+    >
+      <label
+        htmlFor={htmlFor}
+        className="text-xs text-muted-foreground group-data-by-assistant:text-assistant"
+      >
         {label}
       </label>
-      {children}
+      <div className="rounded-lg bg-card group-data-by-assistant:[&_input]:border-assistant group-data-by-assistant:[&_input]:bg-assistant-soft group-data-by-assistant:[&_select]:border-assistant group-data-by-assistant:[&_select]:bg-assistant-soft">
+        {children}
+      </div>
     </div>
   );
 }
@@ -198,9 +251,4 @@ function parsePrice(raw: FormDataEntryValue | null): number | undefined {
   if (typeof raw !== "string" || raw.trim() === "") return undefined;
   const value = Number(raw);
   return Number.isFinite(value) && value >= 0 ? value : undefined;
-}
-
-export function formatCategory(slug: string): string {
-  const words = slug.replaceAll("-", " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
 }

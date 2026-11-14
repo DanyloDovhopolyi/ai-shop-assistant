@@ -1,16 +1,27 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { createContext, type ReactNode, use, useTransition } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useState,
+  useTransition,
+} from "react";
 
 import type { ProductFilters } from "@/entities/product";
 
 import { FiltersPanel, type FiltersPanelProps } from "./filters-panel";
+import { assistantFilterKeys } from "../model/assistant-filters";
 import { filtersToSearchParams } from "../model/search-params";
 
 interface FiltersNavigation {
   readonly isPending: boolean;
+  /** Filters the user picked by hand. */
   readonly navigate: (filters: ProductFilters) => void;
+  /** Filters the assistant picked; the panel marks them as the assistant's. */
+  readonly applyFromAssistant: (filters: ProductFilters) => void;
+  readonly assistantFilters: ProductFilters | null;
 }
 
 const FiltersNavigationContext = createContext<FiltersNavigation | null>(null);
@@ -28,6 +39,9 @@ export function FiltersNavigationProvider({
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  // Session-only: the URL stays the source of truth for the filters themselves.
+  const [assistantFilters, setAssistantFilters] =
+    useState<ProductFilters | null>(null);
 
   const navigate = (filters: ProductFilters) => {
     const query = filtersToSearchParams(filters).toString();
@@ -37,8 +51,15 @@ export function FiltersNavigationProvider({
     });
   };
 
+  const applyFromAssistant = (filters: ProductFilters) => {
+    setAssistantFilters(filters);
+    navigate(filters);
+  };
+
   return (
-    <FiltersNavigationContext value={{ isPending, navigate }}>
+    <FiltersNavigationContext
+      value={{ isPending, navigate, applyFromAssistant, assistantFilters }}
+    >
       {children}
     </FiltersNavigationContext>
   );
@@ -52,9 +73,17 @@ export function useFiltersNavigation(): FiltersNavigation {
   return navigation;
 }
 
-export function UrlFiltersPanel(props: Omit<FiltersPanelProps, "onChange">) {
-  const { navigate } = useFiltersNavigation();
-  return <FiltersPanel {...props} onChange={navigate} />;
+export function UrlFiltersPanel(
+  props: Omit<FiltersPanelProps, "onChange" | "assistantKeys">,
+) {
+  const { navigate, assistantFilters } = useFiltersNavigation();
+  return (
+    <FiltersPanel
+      {...props}
+      assistantKeys={assistantFilterKeys(props.filters, assistantFilters)}
+      onChange={navigate}
+    />
+  );
 }
 
 export function FiltersPendingRegion({

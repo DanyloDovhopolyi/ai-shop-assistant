@@ -87,4 +87,22 @@ describe("FiltersPanel", () => {
       "Price: high to low",
     );
   });
+
+  it("tells which filters the assistant set", () => {
+    render(
+      <FiltersPanel
+        filters={{ ...DEFAULT_FILTERS, category: "laptops", maxPrice: 900 }}
+        categories={categories}
+        assistantKeys={new Set(["category"])}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Category")).toHaveAccessibleDescription(
+      "Set by the assistant",
+    );
+    expect(screen.getByLabelText("Max price")).not.toHaveAccessibleDescription(
+      "Set by the assistant",
+    );
+  });
 });

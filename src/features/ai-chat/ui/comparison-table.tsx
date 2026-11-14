@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 
-import type { ProductId } from "@/entities/product";
+import { formatCategory, type ProductId } from "@/entities/product";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
 
 import { ProductPhoto } from "./product-photo";
 import { usd } from "./usd";
@@ -27,68 +35,68 @@ export function ComparisonTable({
       best: bestRated,
     },
     { label: "Brand", value: (p) => p.brand ?? "—" },
-    { label: "Category", value: (p) => p.category },
+    { label: "Category", value: (p) => formatCategory(p.category) },
   ];
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="-mx-1 overflow-x-auto px-1">
-        <table
-          aria-label="Product comparison"
-          className="w-full table-fixed border-collapse text-xs"
-          // Columns share the width evenly; past 3 products the table scrolls.
-          style={{ minWidth: `${String(4 + products.length * 4.5)}rem` }}
-        >
-          <thead>
-            <tr>
-              <td className="w-16" />
-              {products.map((product) => (
-                <th
-                  key={product.id}
-                  scope="col"
-                  className="p-1 text-left align-top font-medium"
-                >
-                  <div className="mb-1 overflow-hidden rounded-md">
-                    <ProductPhoto
-                      id={product.id}
-                      title={product.title}
-                      sizes="96px"
-                    />
-                  </div>
-                  <span className="line-clamp-2">{product.title}</span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.label}
-                className="border-t border-zinc-200 dark:border-zinc-700"
+      <Table
+        aria-label="Product comparison"
+        className="table-fixed text-xs"
+        // Columns share the width evenly; past 3 products the table scrolls.
+        style={{ minWidth: `${String(4 + products.length * 4.5)}rem` }}
+      >
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableCell className="w-16" />
+            {products.map((product) => (
+              <TableHead
+                key={product.id}
+                scope="col"
+                className="h-auto px-1.5 pb-2 align-top font-medium whitespace-normal"
               >
-                <th
-                  scope="row"
-                  className="p-1 text-left font-normal text-zinc-500"
-                >
-                  {row.label}
-                </th>
-                {products.map((product) => (
-                  <td key={product.id} className="p-1">
-                    {row.value(product)}
-                    {row.best?.includes(product.id) && (
-                      <span className="mt-0.5 block w-fit rounded bg-emerald-100 px-1 text-[10px] text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
-                        Best
-                      </span>
-                    )}
-                  </td>
-                ))}
-              </tr>
+                <div className="mb-1.5 overflow-hidden rounded-md border">
+                  <ProductPhoto
+                    id={product.id}
+                    title={product.title}
+                    sizes="96px"
+                  />
+                </div>
+                <span className="line-clamp-2 leading-snug">
+                  {product.title}
+                </span>
+              </TableHead>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.label} className="hover:bg-transparent">
+              <TableHead
+                scope="row"
+                className="h-auto px-1.5 py-2 font-normal text-muted-foreground"
+              >
+                {row.label}
+              </TableHead>
+              {products.map((product) => (
+                <TableCell
+                  key={product.id}
+                  className="px-1.5 py-2 whitespace-normal tabular-nums"
+                >
+                  {row.value(product)}
+                  {row.best?.includes(product.id) && (
+                    <span className="mt-0.5 block w-fit rounded bg-best-soft px-1 text-[10px] font-medium text-best">
+                      Best
+                    </span>
+                  )}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
       {notFound.length > 0 && (
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-muted-foreground">
           {notFound.length === 1
             ? "One product was not found."
             : `${String(notFound.length)} products were not found.`}

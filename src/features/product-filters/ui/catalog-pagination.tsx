@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { ProductFilters } from "@/entities/product";
+import { buttonVariants } from "@/shared/ui/button";
 
 import { catalogHref } from "../model/search-params";
 
@@ -21,22 +22,22 @@ export function CatalogPagination({
   return (
     <nav
       aria-label="Pagination"
-      className="mt-8 flex items-center justify-center gap-4 text-sm"
+      className="mt-10 flex items-center justify-center gap-4 text-sm"
     >
       <PageLink
         label="Previous page"
         href={page > 1 ? catalogHref(filters, page - 1) : null}
       >
-        ← Previous
+        Previous
       </PageLink>
-      <span className="text-zinc-500">
+      <span className="text-muted-foreground tabular-nums">
         Page {page} of {pageCount}
       </span>
       <PageLink
         label="Next page"
         href={page < pageCount ? catalogHref(filters, page + 1) : null}
       >
-        Next →
+        Next
       </PageLink>
     </nav>
   );
@@ -51,23 +52,16 @@ function PageLink({
   readonly href: string | null;
   readonly children: React.ReactNode;
 }) {
-  const className = "rounded-full border px-4 py-2";
+  const className = buttonVariants({ variant: "outline" });
   if (href === null) {
     return (
-      <span
-        aria-hidden="true"
-        className={`${className} border-zinc-100 text-zinc-300 dark:border-zinc-800 dark:text-zinc-700`}
-      >
+      <span aria-hidden="true" className={`${className} opacity-40`}>
         {children}
       </span>
     );
   }
   return (
-    <Link
-      href={href}
-      aria-label={label}
-      className={`${className} border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900`}
-    >
+    <Link href={href} aria-label={label} className={className}>
       {children}
     </Link>
   );
