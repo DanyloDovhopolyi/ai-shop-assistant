@@ -14,7 +14,7 @@ src/
   shared/   api (http), config (env), lib, ui
 ```
 
-- Imports go down only: `app → features → entities → shared`. Slices on one layer do not import each other.
+- Imports go down only: `app → features → entities → shared`. Slices on one layer do not import each other. Steiger (`npm run lint:fsd`) enforces layers and public APIs in CI.
 - Import a slice only through its `index.ts`.
 - Server-only modules start with `import "server-only"`.
 
