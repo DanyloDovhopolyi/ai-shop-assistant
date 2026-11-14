@@ -25,6 +25,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Architecture (FSD)
+        run: npm run lint:fsd
+
       - name: Format
         run: npm run format:check
 

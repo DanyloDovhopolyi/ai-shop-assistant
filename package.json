@@ -13,7 +13,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "lint:fsd": "steiger ./src"
   },
   "dependencies": {
     "next": "16.4.6",
@@ -21,6 +22,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@feature-sliced/steiger-plugin": "0.8.2",
     "@tailwindcss/turbopack": "4.3.3",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",
@@ -38,6 +40,7 @@
     "msw": "3.0.5",
     "prettier": "3.10.1",
     "prettier-plugin-tailwindcss": "0.8.1",
+    "steiger": "0.10.0",
     "tailwindcss": "4.3.3",
     "typescript": "^5",
     "typescript-eslint": "8.72.2",
