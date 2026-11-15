@@ -11,10 +11,14 @@ import {
   withFallback,
 } from "@/features/semantic-search";
 import { ConfigError, getServerEnv, getSupabaseEnv } from "@/shared/config";
+import { memoizeAsync } from "@/shared/lib";
 
 import { getCatalog } from "./catalog";
 
 let search: ProductSearch | undefined;
+
+/** 768 floats each: ~3 MB at most. */
+const QUERY_EMBEDDING_CACHE_SIZE = 500;
 
 /**
  * Composition root for product search, shared by the chat tool, `/api/search`,
@@ -33,11 +37,18 @@ function createSearch(): ProductSearch {
   try {
     const { SUPABASE_URL, SUPABASE_SECRET_KEY } = getSupabaseEnv();
     const { GOOGLE_GENERATIVE_AI_API_KEY } = getServerEnv();
+    const embeddings = createGeminiEmbeddings({
+      apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
+    });
+    // Same text, same vector: repeated queries (suggestions repeat a lot) skip
+    // the ~0.4 s embedding call and the quota. Shared calls run without the
+    // caller's signal, so one cancelled request cannot fail the others.
+    const embedQuery = memoizeAsync((query) => embeddings.embedQuery(query), {
+      maxEntries: QUERY_EMBEDDING_CACHE_SIZE,
+    });
     const vectors = createPgvectorProductSearch({
       db: createDbClient({ url: SUPABASE_URL, secretKey: SUPABASE_SECRET_KEY }),
-      embedQuery: createGeminiEmbeddings({
-        apiKey: GOOGLE_GENERATIVE_AI_API_KEY,
-      }).embedQuery,
+      embedQuery,
     });
     // The cut-off fits embedding scores only; keyword scores use another scale.
     const semantic: ProductSearch = {

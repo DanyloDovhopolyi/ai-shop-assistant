@@ -47,6 +47,8 @@ describe("search handler", () => {
       "headphones",
       expect.objectContaining({ limit: 6 }),
     );
+    // Suggestions repeat across users; a CDN may serve them for a minute.
+    expect(response.headers.get("Cache-Control")).toMatch(/max-age=60/);
   });
 
   it("answers a too-short query with no suggestions and no search", async () => {
@@ -80,5 +82,7 @@ describe("search handler", () => {
     );
 
     expect(response.status).toBe(503);
+    // A failure must never be cached.
+    expect(response.headers.get("Cache-Control")).toBeNull();
   });
 });
