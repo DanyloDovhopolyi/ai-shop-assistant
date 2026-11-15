@@ -3,7 +3,9 @@ export {
   type DummyJsonCatalogOptions,
 } from "./api/dummyjson-product-catalog";
 export { createInMemoryProductCatalog } from "./api/in-memory-product-catalog";
+export { productQueries } from "./api/product-queries";
 export {
+  formatCategory,
   listCategories,
   type Product,
   type ProductId,

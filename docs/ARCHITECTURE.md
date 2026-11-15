@@ -41,6 +41,7 @@ ui/     React components: call model, never api
 - The build never calls upstream APIs: a page awaits request data (`searchParams`) before cached upstream calls, so prerendering stops first and an outage cannot fail a deploy. The composition root for each route lives in `app/_lib/`.
 - Catalog UI states use React and Next primitives: `<Suspense>` + skeleton for loading, `useTransition` (`isPending`) while a filter change navigates, `error.tsx` with `reset()` for errors.
 - TanStack Query owns data that lives on the client: search suggestions while typing (stage 4) and product details in chat cards (stage 3). Query keys and options come from one `queryOptions` factory per slice.
+- Client queries call this app's route handlers (`/api/products/[id]`), never upstream APIs, so adapters stay the only code that knows DummyJSON.
 - Retries happen in one place: TanStack Query on the client (`fetchJson` with `retries: 0` inside `queryFn`), `fetchJson` on the server.
 
 ## TypeScript

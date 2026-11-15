@@ -13,13 +13,18 @@ export function uiStreamResponse(chunks: UIMessageChunk[]): Response {
 
 /** An answer that calls filterProducts, then replies with text. */
 export function filteringAnswer(output: unknown, reply: string) {
+  return toolAnswer("filterProducts", output, reply);
+}
+
+/** An answer that calls one tool, gets `output`, then replies with text. */
+export function toolAnswer(toolName: string, output: unknown, reply: string) {
   return uiStreamResponse([
     { type: "start" },
     { type: "start-step" },
     {
       type: "tool-input-available",
       toolCallId: "call-1",
-      toolName: "filterProducts",
+      toolName,
       input: {},
     },
     { type: "tool-output-available", toolCallId: "call-1", output },

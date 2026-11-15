@@ -21,3 +21,9 @@ export function listCategories(
 ): readonly string[] {
   return [...new Set(products.map((product) => product.category))].sort();
 }
+
+/** "mobile-accessories" → "Mobile accessories". */
+export function formatCategory(slug: string): string {
+  const words = slug.replaceAll("-", " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}

@@ -1,6 +1,13 @@
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 
 import type { ProductFilters } from "@/entities/product";
+import { Button, buttonVariants } from "@/shared/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+} from "@/shared/ui/pagination";
 
 import { catalogHref } from "../model/search-params";
 
@@ -19,29 +26,41 @@ export function CatalogPagination({
   if (pageCount <= 1) return null;
 
   return (
-    <nav
-      aria-label="Pagination"
-      className="mt-8 flex items-center justify-center gap-4 text-sm"
-    >
-      <PageLink
-        label="Previous page"
-        href={page > 1 ? catalogHref(filters, page - 1) : null}
-      >
-        ← Previous
-      </PageLink>
-      <span className="text-zinc-500">
-        Page {page} of {pageCount}
-      </span>
-      <PageLink
-        label="Next page"
-        href={page < pageCount ? catalogHref(filters, page + 1) : null}
-      >
-        Next →
-      </PageLink>
-    </nav>
+    <Pagination className="mt-10">
+      <PaginationContent>
+        <PaginationItem>
+          <PageLink
+            label="Previous page"
+            href={page > 1 ? catalogHref(filters, page - 1) : null}
+          >
+            <ChevronLeftIcon data-icon="inline-start" />
+            Previous
+          </PageLink>
+        </PaginationItem>
+        <PaginationItem>
+          <span className="px-3 text-sm text-muted-foreground tabular-nums">
+            Page {page} of {pageCount}
+          </span>
+        </PaginationItem>
+        <PaginationItem>
+          <PageLink
+            label="Next page"
+            href={page < pageCount ? catalogHref(filters, page + 1) : null}
+          >
+            Next
+            <ChevronRightIcon data-icon="inline-end" />
+          </PageLink>
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
   );
 }
 
+/**
+ * shadcn's PaginationLink renders a plain <a>. A Next Link with the same
+ * button styles keeps prefetching and client-side navigation, and stays a
+ * real link (Base UI's Button would give it role="button").
+ */
 function PageLink({
   label,
   href,
@@ -51,22 +70,18 @@ function PageLink({
   readonly href: string | null;
   readonly children: React.ReactNode;
 }) {
-  const className = "rounded-full border px-4 py-2";
   if (href === null) {
     return (
-      <span
-        aria-hidden="true"
-        className={`${className} border-zinc-100 text-zinc-300 dark:border-zinc-800 dark:text-zinc-700`}
-      >
+      <Button variant="ghost" disabled aria-hidden="true" tabIndex={-1}>
         {children}
-      </span>
+      </Button>
     );
   }
   return (
     <Link
       href={href}
       aria-label={label}
-      className={`${className} border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-900`}
+      className={buttonVariants({ variant: "outline" })}
     >
       {children}
     </Link>

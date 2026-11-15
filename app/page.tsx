@@ -17,29 +17,41 @@ import {
   UrlFiltersPanel,
 } from "@/features/product-filters";
 import { paginate } from "@/shared/lib";
+import { buttonVariants } from "@/shared/ui/button";
 
 import { ShopAssistant } from "./_components/shop-assistant";
 import { getCatalog } from "./_lib/catalog";
 
 export default function CatalogPage({ searchParams }: PageProps<"/">) {
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
-      <h1 className="mb-6 text-2xl font-semibold">AI Shop Assistant</h1>
-      <FiltersNavigationProvider>
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-          {/* First on mobile (the chat is the main way in), right column on desktop. */}
-          <aside className="lg:sticky lg:top-8 lg:order-last lg:self-start">
-            <ShopAssistant />
-          </aside>
-          <div className="min-w-0">
-            {/* searchParams are request-time data: the shell prerenders, the catalog streams in. */}
-            <Suspense fallback={<ProductGridSkeleton />}>
-              <FilteredCatalog searchParams={searchParams} />
-            </Suspense>
-          </div>
+    <FiltersNavigationProvider>
+      <header className="border-b">
+        <div className="mx-auto flex h-14 w-full max-w-[88rem] items-center px-4 sm:px-6 lg:px-8">
+          <span className="text-base font-semibold tracking-tight">
+            AI Shop Assistant
+          </span>
         </div>
-      </FiltersNavigationProvider>
-    </main>
+      </header>
+      <div className="mx-auto grid w-full max-w-[88rem] flex-1 gap-8 px-4 pt-6 pb-28 sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-8 lg:pb-10">
+        <main className="min-w-0">
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              All products
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Filter by hand, or ask the assistant to do it for you.
+            </p>
+          </div>
+          {/* searchParams are request-time data: the shell prerenders, the catalog streams in. */}
+          <Suspense fallback={<ProductGridSkeleton />}>
+            <FilteredCatalog searchParams={searchParams} />
+          </Suspense>
+        </main>
+        <aside className="lg:sticky lg:top-6 lg:h-[calc(100dvh-6.5rem)] lg:self-start">
+          <ShopAssistant />
+        </aside>
+      </div>
+    </FiltersNavigationProvider>
   );
 }
 
@@ -60,18 +72,32 @@ async function FilteredCatalog({
 
   return (
     <>
-      <UrlFiltersPanel filters={filters} categories={listCategories(catalog)} />
+      <div className="mb-6 border-b pb-5">
+        <UrlFiltersPanel
+          filters={filters}
+          categories={listCategories(catalog)}
+        />
+      </div>
       <FiltersPendingRegion>
         {results.total === 0 ? (
-          <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
+          <div className="rounded-xl border border-dashed p-10 text-center">
             <p className="font-medium">No products match these filters.</p>
-            <Link href="/" className="mt-2 inline-block text-sm underline">
+            <p className="mt-1 text-sm text-muted-foreground">
+              Widen the price range or pick another category.
+            </p>
+            <Link
+              href="/"
+              className={buttonVariants({
+                variant: "outline",
+                className: "mt-4",
+              })}
+            >
               Clear filters
             </Link>
           </div>
         ) : (
           <>
-            <p className="mb-4 text-sm text-zinc-500">
+            <p className="mb-4 text-sm text-muted-foreground tabular-nums">
               Showing {results.firstIndex + 1}–
               {results.firstIndex + results.items.length} of {results.total}{" "}
               products
