@@ -17,7 +17,7 @@ import { cn } from "@/shared/lib";
  * sheet never loses the conversation.
  */
 export function ShopAssistant() {
-  const { applyFromAssistant } = useFiltersNavigation();
+  const { applyFromAssistant, searchFor } = useFiltersNavigation();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -72,6 +72,10 @@ export function ShopAssistant() {
       >
         <ChatPanel
           onFiltersApplied={onFiltersApplied}
+          onSearchInstead={(query) => {
+            searchFor(query);
+            setOpen(false);
+          }}
           onClose={() => {
             setOpen(false);
           }}

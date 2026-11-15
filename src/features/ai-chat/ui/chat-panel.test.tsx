@@ -292,4 +292,24 @@ describe("ChatPanel", () => {
       screen.getByText('{"category":"laptops","maxPrice":1500}'),
     ).toBeInTheDocument();
   });
+
+  it("offers to search the catalog with the same words when the assistant is down", async () => {
+    server.use(
+      http.post("*/api/chat", () =>
+        HttpResponse.text("unavailable", { status: 503 }),
+      ),
+    );
+    const onSearch = vi.fn<(query: string) => void>();
+    renderWithQuery(
+      <ChatPanel onFiltersApplied={vi.fn()} onSearchInstead={onSearch} />,
+    );
+    const user = userEvent.setup();
+
+    await ask(user, "warm gloves");
+    await user.click(
+      await screen.findByRole("button", { name: "Search the catalog instead" }),
+    );
+
+    expect(onSearch).toHaveBeenCalledExactlyOnceWith("warm gloves");
+  });
 });

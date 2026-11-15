@@ -89,10 +89,9 @@ async function FilteredCatalog({
   const catalog = await getCatalog();
   // A search narrows the catalog to matches in order of relevance; filters and
   // sorting then apply on top ("Featured" keeps the relevance order).
-  const searched = query ? await searchCatalog(query, catalog) : null;
-  const base = searched?.kind === "found" ? searched.products : catalog;
+  const base = query ? await searchCatalog(query, catalog) : catalog;
   const results = paginate(
-    searched?.kind === "unavailable" ? [] : applyFilters(base, filters),
+    applyFilters(base, filters),
     pageFromSearchParams(params),
     CATALOG_PAGE_SIZE,
   );
@@ -120,14 +119,7 @@ async function FilteredCatalog({
         />
       </div>
       <FiltersPendingRegion>
-        {searched?.kind === "unavailable" ? (
-          <div className="rounded-xl border border-dashed p-10 text-center">
-            <p className="font-medium">Search is unavailable right now.</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Browse with the filters, or try searching again in a minute.
-            </p>
-          </div>
-        ) : results.total === 0 ? (
+        {results.total === 0 ? (
           <div className="rounded-xl border border-dashed p-10 text-center">
             <p className="font-medium">
               {query

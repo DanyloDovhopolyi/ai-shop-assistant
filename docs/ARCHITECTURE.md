@@ -73,7 +73,8 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 - Every adapter of a port passes one shared **contract test suite** (`describeProductCatalogContract(name, setup)`). A new adapter is accepted when the suite is green.
 - Slices talk only through public APIs (`index.ts`) and Zod-defined data. Changing a slice's internals never breaks another slice.
 - `ProductCatalog` port (`entities/product`): lists the whole catalog. Adapters: DummyJSON, in-memory.
-- `ProductSearch` port (stage 4): free-text query to products. Adapters: pgvector, keyword fallback (stage 6).
+- `ProductSearch` port: free-text query to ranked products. Adapters: pgvector (semantic) and keyword search; both pass `describeProductSearchContract`. `withFallback(semantic, keywords)` answers from keywords when the embedding model or the database fails, so search never goes down with the AI. The relevance cut-off (`relevantHits`) wraps the semantic adapter only: keyword scores use another scale.
+- When the chat model fails, the error offers "Search the catalog instead" with the user's words, which runs without the language model.
 - Embeddings are injected as functions (`EmbedQuery`, `EmbedDocuments`); `createGeminiEmbeddings` is the only code that knows the embedding model.
 
 ## Database (Supabase)

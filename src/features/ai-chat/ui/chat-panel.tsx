@@ -49,9 +49,18 @@ export interface ChatPanelProps {
   readonly onFiltersApplied: (filters: ProductFilters) => void;
   /** Shows a close button on small screens, where the chat is a sheet. */
   readonly onClose?: () => void;
+  /**
+   * When the assistant fails, lets the user run the same words as a catalog
+   * search instead, which works without the language model.
+   */
+  readonly onSearchInstead?: (query: string) => void;
 }
 
-export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
+export function ChatPanel({
+  onFiltersApplied,
+  onClose,
+  onSearchInstead,
+}: ChatPanelProps) {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, stop, error, regenerate } =
     useChat<ChatMessage>({
@@ -65,6 +74,7 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
       },
     });
   const busy = status === "submitted" || status === "streaming";
+  const lastQuestion = lastUserText(messages);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Keep the newest message in view as answers stream in. ScrollArea scrolls
@@ -146,7 +156,7 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
                 </ul>
               </div>
             ) : (
-              messages.map((message) => (
+              messages.filter(hasContent).map((message) => (
                 <article
                   key={message.id}
                   aria-label={message.role === "user" ? "You" : "Assistant"}
@@ -180,7 +190,21 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
             {error && (
               <Alert variant="destructive" role="alert">
                 <AlertCircleIcon />
-                <AlertDescription>{describeChatError(error)}</AlertDescription>
+                <AlertDescription>
+                  {describeChatError(error)}
+                  {onSearchInstead && lastQuestion && (
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto p-0 text-destructive"
+                      onClick={() => {
+                        onSearchInstead(lastQuestion);
+                      }}
+                    >
+                      Search the catalog instead
+                    </Button>
+                  )}
+                </AlertDescription>
                 <AlertAction>
                   <Button
                     type="button"
@@ -418,4 +442,26 @@ function lastAppliedFilters(message: ChatMessage): ProductFilters | undefined {
     (part): part is FilterToolPart & { state: "output-available" } =>
       part.type === "tool-filterProducts" && part.state === "output-available",
   )?.output.filters;
+}
+
+/** The text of the user's latest message, to reuse it as a search. */
+function lastUserText(messages: readonly ChatMessage[]): string | undefined {
+  const message = messages.findLast((item) => item.role === "user");
+  const text = message?.parts
+    .map((part) => (part.type === "text" ? part.text : ""))
+    .join(" ")
+    .trim();
+  return text === "" ? undefined : text;
+}
+
+/**
+ * An answer that failed before saying anything has no parts to show; rendering
+ * it would leave an empty bubble above the error.
+ */
+function hasContent(message: ChatMessage): boolean {
+  return message.parts.some(
+    (part) =>
+      (part.type === "text" && part.text.trim() !== "") ||
+      part.type.startsWith("tool-"),
+  );
 }
