@@ -5,12 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { ProductFilters } from "@/entities/product";
 
-import { filteringAnswer } from "@test/ai/ui-stream";
+import { filteringAnswer, toolAnswer } from "@test/ai/ui-stream";
 import { makeProduct } from "@test/fixtures/product";
 import { server } from "@test/msw/server";
 import { renderWithQuery } from "@test/react/render-with-query";
 
 import { ChatPanel } from "./chat-panel";
+import type { Comparison } from "../model/comparison";
 import type { FilterResult, ProductPreview } from "../model/filter-result";
 
 const budgetLaptop = makeProduct({
@@ -31,6 +32,31 @@ const laptopsUnder1500: FilterResult = {
   preview: [previewOf(budgetLaptop)],
 };
 
+const proLaptop = makeProduct({
+  id: 8,
+  title: "Pro Laptop",
+  category: "laptops",
+  brand: "Acme",
+  price: 2400,
+  rating: 4.9,
+});
+
+const budgetVsPro: Comparison = {
+  products: [budgetLaptop, proLaptop].map(
+    ({ id, title, category, brand, price, rating }) => ({
+      id,
+      title,
+      category,
+      price,
+      rating,
+      ...(brand === undefined ? {} : { brand }),
+    }),
+  ),
+  notFound: [],
+  cheapest: [budgetLaptop.id],
+  bestRated: [proLaptop.id],
+};
+
 /** Serves product details and counts requests per id. */
 function serveProducts() {
   const requests = new Map<string, number>();
@@ -38,8 +64,11 @@ function serveProducts() {
     http.get("*/api/products/:id", ({ params }) => {
       const id = String(params.id);
       requests.set(id, (requests.get(id) ?? 0) + 1);
-      return id === String(budgetLaptop.id)
-        ? HttpResponse.json(budgetLaptop)
+      const product = [budgetLaptop, proLaptop].find(
+        (item) => String(item.id) === id,
+      );
+      return product
+        ? HttpResponse.json(product)
         : HttpResponse.json({ error: "Product not found" }, { status: 404 });
     }),
   );
@@ -155,5 +184,58 @@ describe("ChatPanel", () => {
 
     const card = await screen.findByRole("article", { name: "Gone" });
     expect(await within(card).findByText("No photo")).toBeInTheDocument();
+  });
+
+  it("shows a comparison as a table and marks the best value in each row", async () => {
+    serveProducts();
+    server.use(
+      http.post("*/api/chat", () =>
+        toolAnswer("compareProducts", budgetVsPro, "The Pro is rated higher."),
+      ),
+    );
+    const { user } = setup();
+
+    await ask(user, "compare them");
+
+    const table = await screen.findByRole("table", {
+      name: "Product comparison",
+    });
+    expect(
+      within(table)
+        .getAllByRole("columnheader")
+        .map((th) => th.textContent),
+    ).toEqual(["Budget Laptop", "Pro Laptop"]);
+    const [budgetPrice, proPrice] = within(
+      within(table).getByRole("row", { name: /^Price/ }),
+    ).getAllByRole("cell");
+    expect(budgetPrice).toHaveTextContent("Best");
+    expect(proPrice).not.toHaveTextContent("Best");
+    const [budgetRating, proRating] = within(
+      within(table).getByRole("row", { name: /^Rating/ }),
+    ).getAllByRole("cell");
+    expect(budgetRating).not.toHaveTextContent("Best");
+    expect(proRating).toHaveTextContent("Best");
+  });
+
+  it("reuses the photo a chat card already loaded for the same product", async () => {
+    const requests = serveProducts();
+    let calls = 0;
+    server.use(
+      http.post("*/api/chat", () =>
+        ++calls === 1
+          ? filteringAnswer(laptopsUnder1500, "One laptop fits.")
+          : toolAnswer("compareProducts", budgetVsPro, "Compared."),
+      ),
+    );
+    const { user } = setup();
+
+    await ask(user, "cheap laptops");
+    await screen.findByRole("img", { name: "Budget Laptop" });
+    await ask(user, "compare with the pro");
+    const table = await screen.findByRole("table");
+    await within(table).findByRole("img", { name: "Pro Laptop" });
+
+    expect(requests.get(String(budgetLaptop.id))).toBe(1);
+    expect(requests.get(String(proLaptop.id))).toBe(1);
   });
 });

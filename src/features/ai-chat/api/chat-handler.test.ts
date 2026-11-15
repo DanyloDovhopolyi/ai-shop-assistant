@@ -31,12 +31,17 @@ function chatRequest(text: string, init: RequestInit = {}) {
   });
 }
 
-function modelThatFilters(input: unknown, reply = "Here you go.") {
-  const turns = mockValues(
-    toolCallTurn("filterProducts", input),
-    textTurn(reply),
-  );
+function modelThatCalls(
+  toolName: string,
+  input: unknown,
+  reply = "Here you go.",
+) {
+  const turns = mockValues(toolCallTurn(toolName, input), textTurn(reply));
   return new MockLanguageModelV4({ doStream: () => Promise.resolve(turns()) });
+}
+
+function modelThatFilters(input: unknown, reply = "Here you go.") {
+  return modelThatCalls("filterProducts", input, reply);
 }
 
 describe("chat handler", () => {
@@ -79,6 +84,30 @@ describe("chat handler", () => {
     );
     expect(chunks).not.toContainEqual(
       expect.objectContaining({ type: "tool-output-available" }),
+    );
+  });
+
+  it("compares the products the model picked and streams the comparison", async () => {
+    const handle = createChatHandler({
+      model: modelThatCalls("compareProducts", { productIds: [3, 1] }),
+      catalog,
+    });
+
+    const chunks = await readUiChunks(
+      await handle(chatRequest("compare the phone and the budget laptop")),
+    );
+
+    expect(chunks).toContainEqual(
+      expect.objectContaining({
+        type: "tool-output-available",
+        output: expect.objectContaining({
+          products: [
+            expect.objectContaining({ title: "Phone" }),
+            expect.objectContaining({ title: "Budget Laptop" }),
+          ],
+          cheapest: [3],
+        }) as unknown,
+      }),
     );
   });
 

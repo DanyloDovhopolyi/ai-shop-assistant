@@ -4,6 +4,7 @@ import {
   type InferUITools,
   isStepCount,
   type LanguageModel,
+  type ToolSet,
   safeValidateUIMessages,
   streamText,
   toUIMessageStream,
@@ -14,11 +15,12 @@ import { z } from "zod";
 
 import { listCategories, type ProductCatalog } from "@/entities/product";
 
+import { createCompareProductsTool } from "./compare-products-tool";
 import { createFilterProductsTool } from "./filter-products-tool";
 import { toChatErrorCode } from "../model/chat-error";
 import { buildSystemPrompt } from "../model/system-prompt";
 
-/** One tool round-trip plus the final answer; stops runaway tool loops. */
+/** Find, then compare, then answer; stops runaway tool loops. */
 const MAX_STEPS = 3;
 
 const ChatRequestSchema = z.object({ messages: z.array(z.unknown()).min(1) });
@@ -29,7 +31,10 @@ export interface ChatHandlerDeps {
 }
 
 function createChatTools({ catalog }: Pick<ChatHandlerDeps, "catalog">) {
-  return { filterProducts: createFilterProductsTool({ catalog }) };
+  return {
+    filterProducts: createFilterProductsTool({ catalog }),
+    compareProducts: createCompareProductsTool({ catalog }),
+  } satisfies ToolSet;
 }
 
 export type ChatTools = InferUITools<ReturnType<typeof createChatTools>>;
