@@ -1,0 +1,37 @@
+name: Evals
+
+# Runs the chat against the real model. Slow and uses API quota, so it runs only
+# when the assistant's behaviour can change, and on demand.
+on:
+  pull_request:
+    paths:
+      - "src/features/ai-chat/**"
+      - "src/shared/config/models.ts"
+      - "evals/**"
+      - "package-lock.json"
+  workflow_dispatch:
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Without the secret (e.g. pull requests from forks) the suite is skipped.
+      GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Results also appear as a table on the run's summary page.
+      - name: Chat evals
+        run: npm run evals
