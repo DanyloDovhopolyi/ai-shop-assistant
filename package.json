@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint:fsd": "steiger ./src",
-    "index:products": "tsx --env-file=.env scripts/index-products.mts"
+    "index:products": "tsx --env-file=.env scripts/index-products.mts",
+    "evals": "vitest run --config vitest.evals.config.mts"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.121",

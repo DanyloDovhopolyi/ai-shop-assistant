@@ -113,3 +113,9 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 - Test behaviour through the public API; assert outcomes, not calls.
 - Keep async Server Components thin: their logic is pure functions tested directly.
 - Type-level guarantees (e.g. `ProductId` brand) are proven with `@ts-expect-error`; `typecheck` fails if the forbidden code starts compiling.
+
+## Evals
+
+- `npm run evals` runs `evals/cases.ts` through the real `createChatHandler` and model (`CHAT_MODEL_ID`, shared with the route). Each case states the expected first move: a tool with specific input, a search whose query contains certain words, or no tool for off-topic and injection prompts.
+- Scoring (`evals/score.ts`) is pure and unit-tested. The run passes when every critical (safety) case passes and at least 90% of all cases pass: safety is never averaged away, while tool choice may wobble.
+- Evals stay out of `npm test` (slow, paid, non-deterministic). CI runs them in `.github/workflows/evals.yml` when the assistant's code or the evals change, using the `GOOGLE_GENERATIVE_AI_API_KEY` repo secret, and writes a results table to the run summary.
