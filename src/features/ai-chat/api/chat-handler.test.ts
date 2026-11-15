@@ -156,6 +156,30 @@ describe("chat handler", () => {
     );
   });
 
+  it("reports the model, token usage, and duration of every answer", async () => {
+    const handle = createChatHandler({
+      model: modelThatFilters({ category: "laptops" }),
+      catalog,
+      search: noSearch,
+    });
+
+    const chunks = await readUiChunks(await handle(chatRequest("laptops")));
+    const metadata = Object.assign(
+      {},
+      ...chunks
+        .filter((chunk) => "messageMetadata" in chunk)
+        .map((chunk) => chunk.messageMetadata),
+    ) as Record<string, unknown>;
+
+    // Two model turns of the mock (tool call, then text), 10 + 5 tokens each.
+    expect(metadata).toMatchObject({
+      model: "mock-model-id",
+      inputTokens: 20,
+      outputTokens: 10,
+      durationMs: expect.any(Number) as unknown,
+    });
+  });
+
   it("tells the model which categories exist so it picks real ones", async () => {
     const model = modelThatFilters({});
     await readUiChunks(

@@ -19,6 +19,7 @@ import { createCompareProductsTool } from "./compare-products-tool";
 import { createFilterProductsTool } from "./filter-products-tool";
 import { createSearchProductsTool } from "./search-products-tool";
 import { toChatErrorCode } from "../model/chat-error";
+import type { ChatMetadata } from "../model/run-details";
 import type { ProductMatcher } from "../model/search-result";
 import { buildSystemPrompt } from "../model/system-prompt";
 
@@ -45,7 +46,7 @@ function createChatTools({
 }
 
 export type ChatTools = InferUITools<ReturnType<typeof createChatTools>>;
-export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
+export type ChatMessage = UIMessage<ChatMetadata, UIDataTypes, ChatTools>;
 
 /** Framework-agnostic POST handler: Request in, streamed UI messages out. */
 export function createChatHandler({ model, catalog, search }: ChatHandlerDeps) {
@@ -68,6 +69,7 @@ export function createChatHandler({ model, catalog, search }: ChatHandlerDeps) {
     const categories = listCategories(
       await catalog.list({ signal: request.signal }),
     );
+    const startedAt = performance.now();
     const result = streamText({
       model,
       instructions: buildSystemPrompt(categories),
@@ -79,8 +81,20 @@ export function createChatHandler({ model, catalog, search }: ChatHandlerDeps) {
     });
 
     return createUIMessageStreamResponse({
-      stream: toUIMessageStream({
+      stream: toUIMessageStream<typeof tools, ChatMessage>({
         stream: result.stream,
+        // Feeds the "Under the hood" panel: which model, how long, how many tokens.
+        messageMetadata: ({ part }): ChatMetadata | undefined => {
+          if (part.type === "start") return { model: modelIdOf(model) };
+          if (part.type !== "finish") return undefined;
+          const { inputTokens, outputTokens } = part.totalUsage;
+          return {
+            durationMs: Math.round(performance.now() - startedAt),
+            finishReason: part.finishReason,
+            ...(inputTokens === undefined ? {} : { inputTokens }),
+            ...(outputTokens === undefined ? {} : { outputTokens }),
+          };
+        },
         // The client gets a stable code; the real cause stays in the server log.
         onError: (error) => {
           console.error(error);
@@ -89,4 +103,8 @@ export function createChatHandler({ model, catalog, search }: ChatHandlerDeps) {
       }),
     });
   };
+}
+
+function modelIdOf(model: LanguageModel): string {
+  return typeof model === "string" ? model : model.modelId;
 }

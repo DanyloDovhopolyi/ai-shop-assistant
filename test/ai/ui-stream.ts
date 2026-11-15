@@ -17,15 +17,26 @@ export function filteringAnswer(output: unknown, reply: string) {
 }
 
 /** An answer that calls one tool, gets `output`, then replies with text. */
-export function toolAnswer(toolName: string, output: unknown, reply: string) {
+export function toolAnswer(
+  toolName: string,
+  output: unknown,
+  reply: string,
+  {
+    input = {},
+    metadata,
+  }: { input?: unknown; metadata?: Record<string, unknown> } = {},
+) {
   return uiStreamResponse([
-    { type: "start" },
+    {
+      type: "start",
+      ...(metadata ? { messageMetadata: { model: metadata.model } } : {}),
+    },
     { type: "start-step" },
     {
       type: "tool-input-available",
       toolCallId: "call-1",
       toolName,
-      input: {},
+      input,
     },
     { type: "tool-output-available", toolCallId: "call-1", output },
     { type: "finish-step" },
@@ -34,6 +45,6 @@ export function toolAnswer(toolName: string, output: unknown, reply: string) {
     { type: "text-delta", id: "t1", delta: reply },
     { type: "text-end", id: "t1" },
     { type: "finish-step" },
-    { type: "finish" },
+    { type: "finish", ...(metadata ? { messageMetadata: metadata } : {}) },
   ]);
 }

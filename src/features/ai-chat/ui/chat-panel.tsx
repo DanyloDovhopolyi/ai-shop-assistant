@@ -26,9 +26,11 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 
 import { ComparisonTable } from "./comparison-table";
 import { ProductPreviewCard } from "./product-preview-card";
+import { RunDetailsPanel } from "./run-details-panel";
 import type { ChatMessage } from "../api/chat-handler";
 import { describeChatError } from "../model/chat-error";
 import type { FilterResult, ProductPreview } from "../model/filter-result";
+import { ChatMetadataSchema, describeRun } from "../model/run-details";
 import type { SearchResult } from "../model/search-result";
 
 type MessagePart = ChatMessage["parts"][number];
@@ -53,6 +55,8 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, stop, error, regenerate } =
     useChat<ChatMessage>({
+      // Metadata comes from the network: validate it like any other boundary.
+      messageMetadataSchema: ChatMetadataSchema,
       // Applied when the answer ends, so the grid changes once per request
       // instead of re-rendering while the reply is still streaming.
       onFinish: ({ message }) => {
@@ -160,6 +164,11 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
                       part={part}
                     />
                   ))}
+                  {/* Shown once the answer is complete: duration arrives with "finish". */}
+                  {message.role === "assistant" &&
+                    message.metadata?.durationMs !== undefined && (
+                      <RunDetailsPanel run={describeRun(message)} />
+                    )}
                 </article>
               ))
             )}
