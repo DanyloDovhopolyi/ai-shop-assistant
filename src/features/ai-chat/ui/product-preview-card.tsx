@@ -1,3 +1,5 @@
+import { Card } from "@/shared/ui/card";
+
 import { ProductPhoto } from "./product-photo";
 import { usd } from "./usd";
 import type { ProductPreview } from "../model/filter-result";
@@ -13,22 +15,21 @@ export function ProductPreviewCard({
   readonly product: ProductPreview;
 }) {
   return (
-    <article
-      aria-label={product.title}
-      className="flex w-32 shrink-0 flex-col overflow-hidden rounded-lg border bg-card"
-    >
-      <ProductPhoto id={product.id} title={product.title} sizes="128px" />
-      <div className="flex flex-1 flex-col gap-0.5 border-t p-2">
-        <p className="line-clamp-2 text-xs font-medium">{product.title}</p>
-        <div className="mt-auto flex items-center justify-between text-[11px]">
-          <span className="font-semibold tabular-nums">
-            {usd.format(product.price)}
-          </span>
-          <span className="text-muted-foreground tabular-nums">
-            ★ {product.rating.toFixed(1)}
-          </span>
+    <article aria-label={product.title} className="h-full">
+      <Card size="sm" className="h-full w-32 shrink-0 gap-0 py-0">
+        <ProductPhoto id={product.id} title={product.title} sizes="128px" />
+        <div className="flex flex-1 flex-col gap-0.5 border-t p-2">
+          <p className="line-clamp-2 text-xs font-medium">{product.title}</p>
+          <div className="mt-auto flex items-center justify-between text-[11px]">
+            <span className="font-semibold tabular-nums">
+              {usd.format(product.price)}
+            </span>
+            <span className="text-muted-foreground tabular-nums">
+              ★ {product.rating.toFixed(1)}
+            </span>
+          </div>
         </div>
-      </div>
+      </Card>
     </article>
   );
 }

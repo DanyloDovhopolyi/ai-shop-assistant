@@ -1,9 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { XIcon } from "lucide-react";
+import { AlertCircleIcon, XIcon } from "lucide-react";
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
-
 
 import {
   formatCategory,
@@ -11,8 +10,19 @@ import {
   SORT_LABELS,
 } from "@/entities/product";
 import { assertNever } from "@/shared/lib";
+import { Alert, AlertAction, AlertDescription } from "@/shared/ui/alert";
+import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 
 import { ComparisonTable } from "./comparison-table";
 import { ProductPreviewCard } from "./product-preview-card";
@@ -49,12 +59,15 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
       },
     });
   const busy = status === "submitted" || status === "streaming";
-  const logRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Keep the newest message in view as answers stream in.
+  // Keep the newest message in view as answers stream in. ScrollArea scrolls
+  // its inner viewport, not the root the ref points at.
   useEffect(() => {
-    const log = logRef.current;
-    if (log) log.scrollTop = log.scrollHeight;
+    const viewport = scrollRef.current?.querySelector<HTMLElement>(
+      "[data-slot=scroll-area-viewport]",
+    );
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
   }, [messages, status]);
 
   const send = (text: string) => {
@@ -70,138 +83,146 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
   };
 
   return (
-    <section
-      aria-label="Shopping assistant"
-      className="flex h-full flex-col overflow-hidden rounded-2xl border bg-card"
-    >
-      <header className="flex items-start justify-between gap-3 border-b px-5 py-4">
-        <div>
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
+    <section aria-label="Shopping assistant" className="h-full">
+      <Card className="h-full gap-0 py-0">
+        <CardHeader className="border-b pt-4">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
             <span aria-hidden className="size-2.5 rounded-full bg-assistant" />
-            Assistant
-          </h2>
-          <p className="text-sm text-muted-foreground">
+            <h2>Assistant</h2>
+          </CardTitle>
+          {/* col-start-1: the close action is hidden on desktop but still makes the header a two-column grid. */}
+          <CardDescription className="col-start-1">
             Say what you need. I&apos;ll set the filters.
-          </p>
-        </div>
-        {onClose && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            aria-label="Close assistant"
-            className="lg:hidden"
-          >
-            <XIcon />
-          </Button>
-        )}
-      </header>
+          </CardDescription>
+          {onClose && (
+            <CardAction className="lg:hidden">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                aria-label="Close assistant"
+              >
+                <XIcon />
+              </Button>
+            </CardAction>
+          )}
+        </CardHeader>
 
-      <div
-        ref={logRef}
-        role="log"
-        aria-live="polite"
-        className="flex flex-1 flex-col gap-4 overflow-y-auto px-5 py-4"
-      >
-        {messages.length === 0 ? (
-          <div className="mt-auto flex flex-col gap-2">
-            <p className="text-sm text-muted-foreground">Try one of these:</p>
-            <ul className="flex flex-col gap-2" aria-label="Example requests">
-              {EXAMPLES.map((example) => (
-                <li key={example}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      send(example);
-                    }}
-                    className="w-full rounded-lg border px-3 py-2.5 text-left text-sm transition-colors hover:border-assistant hover:text-assistant focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                  >
-                    {example}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <article
-              key={message.id}
-              aria-label={message.role === "user" ? "You" : "Assistant"}
-              className={
-                message.role === "user"
-                  ? "max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground"
-                  : // The assistant's voice: no bubble, its colour on the edge. Full
-                    // width, because tables and card rows need the room.
-                    "flex w-full min-w-0 flex-col gap-2.5 border-l-2 border-assistant pl-3 text-sm"
-              }
-            >
-              {message.parts.map((part, index) => (
-                <MessagePartView
-                  // Parts have no id; their order within a message never changes.
-                  key={index}
-                  part={part}
-                />
-              ))}
-            </article>
-          ))
-        )}
-        {status === "submitted" && (
-          <p className="border-l-2 border-assistant/40 pl-3 text-sm text-muted-foreground motion-safe:animate-pulse">
-            Thinking…
-          </p>
-        )}
-        {error && (
+        <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
           <div
-            role="alert"
-            className="flex items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+            role="log"
+            aria-live="polite"
+            className="flex min-h-full flex-col gap-4 px-4 py-4"
           >
-            <span>{describeChatError(error)}</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => void regenerate()}
-            >
-              Retry
-            </Button>
+            {messages.length === 0 ? (
+              <div className="mt-auto flex flex-col gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Try one of these:
+                </p>
+                <ul
+                  className="flex flex-col gap-2"
+                  aria-label="Example requests"
+                >
+                  {EXAMPLES.map((example) => (
+                    <li key={example}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          send(example);
+                        }}
+                        className="h-auto w-full justify-start py-2.5 hover:border-assistant hover:text-assistant"
+                      >
+                        {example}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <article
+                  key={message.id}
+                  aria-label={message.role === "user" ? "You" : "Assistant"}
+                  className={
+                    message.role === "user"
+                      ? "max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground"
+                      : // The assistant's voice: no bubble, its colour on the edge.
+                        // Full width, because tables and card rows need the room.
+                        "flex w-full min-w-0 flex-col gap-2.5 border-l-2 border-assistant pl-3 text-sm"
+                  }
+                >
+                  {message.parts.map((part, index) => (
+                    <MessagePartView
+                      // Parts have no id; their order within a message never changes.
+                      key={index}
+                      part={part}
+                    />
+                  ))}
+                </article>
+              ))
+            )}
+            {status === "submitted" && (
+              <p className="border-l-2 border-assistant/40 pl-3 text-sm text-muted-foreground motion-safe:animate-pulse">
+                Thinking…
+              </p>
+            )}
+            {error && (
+              <Alert variant="destructive" role="alert">
+                <AlertCircleIcon />
+                <AlertDescription>{describeChatError(error)}</AlertDescription>
+                <AlertAction>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void regenerate()}
+                  >
+                    Retry
+                  </Button>
+                </AlertAction>
+              </Alert>
+            )}
           </div>
-        )}
-      </div>
+        </ScrollArea>
 
-      <form onSubmit={submit} className="flex gap-2 border-t p-3">
-        <label htmlFor="chat-input" className="sr-only">
-          Message
-        </label>
-        <Input
-          id="chat-input"
-          value={input}
-          onChange={(event) => {
-            setInput(event.target.value);
-          }}
-          placeholder="Headphones under $100, best rated first"
-          autoComplete="off"
-          className="h-10 flex-1"
-        />
-        {busy ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-10"
-            onClick={() => void stop()}
-          >
-            Stop
-          </Button>
-        ) : (
-          <Button
-            type="submit"
-            disabled={!input.trim()}
-            className="h-10 bg-assistant text-assistant-foreground hover:bg-assistant/90"
-          >
-            Send
-          </Button>
-        )}
-      </form>
+        <CardFooter className="p-3">
+          <form onSubmit={submit} className="flex w-full gap-2">
+            <label htmlFor="chat-input" className="sr-only">
+              Message
+            </label>
+            <Input
+              id="chat-input"
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value);
+              }}
+              placeholder="Headphones under $100, best rated first"
+              autoComplete="off"
+              className="h-10 flex-1 bg-card"
+            />
+            {busy ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                onClick={() => void stop()}
+              >
+                Stop
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={!input.trim()}
+                className="h-10 bg-assistant text-assistant-foreground hover:bg-assistant/90"
+              >
+                Send
+              </Button>
+            )}
+          </form>
+        </CardFooter>
+      </Card>
     </section>
   );
 }
@@ -301,12 +322,12 @@ function FilterSummary({ result }: { readonly result: FilterResult }) {
         </span>
         {/* Same colour as the filters it set in the panel: one visual link. */}
         {chips.map((chip) => (
-          <span
+          <Badge
             key={chip}
-            className="rounded-full bg-assistant-soft px-2 py-0.5 text-assistant"
+            className="bg-assistant-soft font-normal text-assistant"
           >
             {chip}
-          </span>
+          </Badge>
         ))}
       </div>
       {result.preview.length > 0 && (

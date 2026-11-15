@@ -7,9 +7,22 @@ import {
   SORT_LABELS,
   SORT_ORDERS,
 } from "@/entities/product";
+import { cn } from "@/shared/lib";
+import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/shared/ui/native-select";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from "@/shared/ui/input-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 
 import type { FilterKey } from "../model/assistant-filters";
 
@@ -63,6 +76,22 @@ export function FiltersPanel({
   const describedBy = (key: FilterKey) =>
     byAssistant(key) ? ASSISTANT_LEGEND_ID : undefined;
 
+  const categoryItems: Record<string, string> = {
+    [ANY]: "All categories",
+    ...Object.fromEntries(
+      categories.map((category) => [category, formatCategory(category)]),
+    ),
+  };
+  const ratingItems: Record<string, string> = {
+    [ANY]: "Any rating",
+    ...Object.fromEntries(
+      RATING_OPTIONS.map((rating) => [
+        String(rating),
+        `${String(rating)}+ stars`,
+      ]),
+    ),
+  };
+
   return (
     <form
       // Remount when filters change from outside (URL, assistant) so uncontrolled
@@ -70,28 +99,24 @@ export function FiltersPanel({
       key={JSON.stringify(filters)}
       aria-label="Product filters"
       onSubmit={submitPrices}
-      className="flex flex-wrap items-end gap-x-3 gap-y-3"
+      className="flex flex-wrap items-end gap-3"
     >
       <Field
         label="Category"
         htmlFor="filter-category"
         byAssistant={byAssistant("category")}
       >
-        <NativeSelect
+        <FilterSelect
           id="filter-category"
-          aria-describedby={describedBy("category")}
-          value={filters.category ?? ""}
-          onChange={(event) => {
-            change("category", event.target.value || undefined);
+          items={categoryItems}
+          value={filters.category ?? ANY}
+          highlighted={byAssistant("category")}
+          describedBy={describedBy("category")}
+          className="w-44"
+          onValueChange={(value) => {
+            change("category", value === ANY ? undefined : value);
           }}
-        >
-          <NativeSelectOption value="">All categories</NativeSelectOption>
-          {categories.map((category) => (
-            <NativeSelectOption key={category} value={category}>
-              {formatCategory(category)}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        />
       </Field>
 
       {(["minPrice", "maxPrice"] as const).map((key) => (
@@ -101,21 +126,31 @@ export function FiltersPanel({
           htmlFor={`filter-${key}`}
           byAssistant={byAssistant(key)}
         >
-          <Input
-            id={`filter-${key}`}
-            name={key}
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="any"
-            placeholder="$"
-            aria-describedby={describedBy(key)}
-            defaultValue={filters[key] ?? ""}
-            onBlur={(event) => {
-              commitPrice(key, event.target.value);
-            }}
-            className="w-24 tabular-nums"
-          />
+          <InputGroup
+            className={cn(
+              "w-28 bg-card",
+              byAssistant(key) && "border-assistant bg-assistant-soft",
+            )}
+          >
+            <InputGroupAddon>
+              <InputGroupText>$</InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              id={`filter-${key}`}
+              name={key}
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="any"
+              placeholder={key === "minPrice" ? "0" : "Any"}
+              aria-describedby={describedBy(key)}
+              defaultValue={filters[key] ?? ""}
+              onBlur={(event) => {
+                commitPrice(key, event.target.value);
+              }}
+              className="tabular-nums"
+            />
+          </InputGroup>
         </Field>
       ))}
 
@@ -124,24 +159,19 @@ export function FiltersPanel({
         htmlFor="filter-rating"
         byAssistant={byAssistant("minRating")}
       >
-        <NativeSelect
+        <FilterSelect
           id="filter-rating"
-          aria-describedby={describedBy("minRating")}
-          value={filters.minRating ?? ""}
-          onChange={(event) => {
-            change(
-              "minRating",
-              event.target.value ? Number(event.target.value) : undefined,
-            );
+          items={ratingItems}
+          value={
+            filters.minRating === undefined ? ANY : String(filters.minRating)
+          }
+          highlighted={byAssistant("minRating")}
+          describedBy={describedBy("minRating")}
+          className="w-36"
+          onValueChange={(value) => {
+            change("minRating", value === ANY ? undefined : Number(value));
           }}
-        >
-          <NativeSelectOption value="">Any rating</NativeSelectOption>
-          {RATING_OPTIONS.map((rating) => (
-            <NativeSelectOption key={rating} value={rating}>
-              {rating}+ stars
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        />
       </Field>
 
       <Field
@@ -149,36 +179,34 @@ export function FiltersPanel({
         htmlFor="filter-sort"
         byAssistant={byAssistant("sort")}
       >
-        <NativeSelect
+        <FilterSelect
           id="filter-sort"
-          aria-describedby={describedBy("sort")}
+          items={SORT_LABELS}
           value={filters.sort}
-          onChange={(event) => {
+          highlighted={byAssistant("sort")}
+          describedBy={describedBy("sort")}
+          className="w-44"
+          onValueChange={(value) => {
             change(
               "sort",
-              SORT_ORDERS.find((order) => order === event.target.value),
+              SORT_ORDERS.find((order) => order === value),
             );
           }}
-        >
-          {SORT_ORDERS.map((order) => (
-            <NativeSelectOption key={order} value={order}>
-              {SORT_LABELS[order]}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+        />
       </Field>
 
       {/* Lets Enter in a price field submit the form. */}
       <button type="submit" hidden />
       <div className="ml-auto flex items-center gap-3">
         {assistantKeys.size > 0 && (
-          <p
+          <Badge
             id={ASSISTANT_LEGEND_ID}
-            className="flex items-center gap-1.5 text-xs text-assistant"
+            variant="outline"
+            className="border-assistant/40 text-assistant"
           >
-            <span aria-hidden className="size-2 rounded-full bg-assistant" />
+            <span aria-hidden className="size-1.5 rounded-full bg-assistant" />
             Set by the assistant
-          </p>
+          </Badge>
         )}
         <Button
           type="button"
@@ -195,6 +223,55 @@ export function FiltersPanel({
 }
 
 const ASSISTANT_LEGEND_ID = "filters-assistant-legend";
+/** Select value for "no filter"; Base UI treats an empty string as a real value. */
+const ANY = "any";
+
+function FilterSelect({
+  id,
+  items,
+  value,
+  highlighted,
+  describedBy,
+  className,
+  onValueChange,
+}: {
+  readonly id: string;
+  readonly items: Readonly<Record<string, string>>;
+  readonly value: string;
+  readonly highlighted: boolean;
+  readonly describedBy: string | undefined;
+  readonly className: string;
+  readonly onValueChange: (value: string) => void;
+}) {
+  return (
+    <Select
+      items={items}
+      value={value}
+      onValueChange={(next) => {
+        if (next !== null) onValueChange(next);
+      }}
+    >
+      <SelectTrigger
+        id={id}
+        aria-describedby={describedBy}
+        className={cn(
+          "bg-card",
+          className,
+          highlighted && "border-assistant bg-assistant-soft",
+        )}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(items).map(([itemValue, label]) => (
+          <SelectItem key={itemValue} value={itemValue}>
+            {label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 /**
  * A labelled control. Filters the assistant set wear its colour, so the user
@@ -212,19 +289,17 @@ function Field({
   readonly children: React.ReactNode;
 }) {
   return (
-    <div
-      data-by-assistant={byAssistant || undefined}
-      className="group flex flex-col gap-1"
-    >
+    <div className="flex flex-col gap-1.5">
       <label
         htmlFor={htmlFor}
-        className="text-xs text-muted-foreground group-data-by-assistant:text-assistant"
+        className={cn(
+          "text-xs text-muted-foreground",
+          byAssistant && "text-assistant",
+        )}
       >
         {label}
       </label>
-      <div className="rounded-lg bg-card group-data-by-assistant:[&_input]:border-assistant group-data-by-assistant:[&_input]:bg-assistant-soft group-data-by-assistant:[&_select]:border-assistant group-data-by-assistant:[&_select]:bg-assistant-soft">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

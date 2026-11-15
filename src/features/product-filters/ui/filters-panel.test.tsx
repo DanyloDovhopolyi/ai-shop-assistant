@@ -24,9 +24,9 @@ describe("FiltersPanel", () => {
   it("applies a category as soon as it is picked, keeping other filters", async () => {
     const { onChange, user } = setup({ ...DEFAULT_FILTERS, sort: "price-asc" });
 
-    await user.selectOptions(
-      screen.getByLabelText("Category"),
-      "Mobile accessories",
+    await user.click(screen.getByLabelText("Category"));
+    await user.click(
+      await screen.findByRole("option", { name: "Mobile accessories" }),
     );
 
     expect(onChange).toHaveBeenLastCalledWith({
@@ -78,12 +78,12 @@ describe("FiltersPanel", () => {
       sort: "price-desc",
     });
 
-    expect(screen.getByLabelText("Category")).toHaveDisplayValue("Laptops");
+    expect(screen.getByLabelText("Category")).toHaveTextContent("Laptops");
     expect(screen.getByLabelText("Min price")).toHaveValue(100);
-    expect(screen.getByLabelText("Minimum rating")).toHaveDisplayValue(
+    expect(screen.getByLabelText("Minimum rating")).toHaveTextContent(
       "4+ stars",
     );
-    expect(screen.getByLabelText("Sort by")).toHaveDisplayValue(
+    expect(screen.getByLabelText("Sort by")).toHaveTextContent(
       "Price: high to low",
     );
   });

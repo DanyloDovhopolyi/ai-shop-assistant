@@ -1,5 +1,13 @@
 import Image from "next/image";
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardTitle,
+} from "@/shared/ui/card";
+
 import { formatCategory, type Product } from "../model/product";
 
 const usd = new Intl.NumberFormat("en-US", {
@@ -10,30 +18,26 @@ const usd = new Intl.NumberFormat("en-US", {
 export function ProductCard({ product }: { readonly product: Product }) {
   const titleId = `product-${String(product.id)}-title`;
   return (
-    <article
-      aria-labelledby={titleId}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition-colors hover:border-foreground/30"
-    >
-      <div className="relative aspect-square">
-        <Image
-          src={product.imageUrl}
-          alt={product.title}
-          fill
-          sizes="(min-width: 1024px) 22vw, (min-width: 640px) 33vw, 50vw"
-          className="object-contain p-5"
-        />
-      </div>
-      <div className="flex flex-1 flex-col gap-1 border-t px-3.5 pt-3 pb-3.5">
-        <h3
-          id={titleId}
-          className="line-clamp-2 text-[15px] leading-snug font-medium"
-        >
-          {product.title}
-        </h3>
-        <p className="text-xs text-muted-foreground">
-          {product.brand ?? formatCategory(product.category)}
-        </p>
-        <div className="mt-auto flex items-baseline justify-between pt-3">
+    <article aria-labelledby={titleId} className="h-full">
+      <Card className="h-full gap-3 pt-0 transition-shadow hover:ring-foreground/25">
+        <div className="relative aspect-square border-b">
+          <Image
+            src={product.imageUrl}
+            alt={product.title}
+            fill
+            sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 50vw"
+            className="object-contain p-5"
+          />
+        </div>
+        <CardContent className="flex flex-col gap-1">
+          <CardTitle id={titleId} className="line-clamp-2 text-[15px]">
+            {product.title}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {product.brand ?? formatCategory(product.category)}
+          </CardDescription>
+        </CardContent>
+        <CardFooter className="mt-auto items-baseline justify-between">
           <span className="text-base font-semibold tabular-nums">
             {usd.format(product.price)}
           </span>
@@ -43,8 +47,8 @@ export function ProductCard({ product }: { readonly product: Product }) {
           >
             ★ {product.rating.toFixed(1)}
           </span>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </article>
   );
 }
