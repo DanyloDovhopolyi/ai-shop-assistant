@@ -14,6 +14,11 @@ export async function GET(
 
   const product = (await getCatalog()).find((item) => item.id === id.data);
   return product
-    ? Response.json(product)
+    ? // The catalog itself is cached for hours; a product is safe to reuse briefly.
+      Response.json(product, {
+        headers: {
+          "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
+        },
+      })
     : Response.json({ error: "Product not found" }, { status: 404 });
 }

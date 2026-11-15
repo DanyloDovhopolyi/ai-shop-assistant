@@ -13,6 +13,13 @@ import {
 
 const QuerySchema = z.string().trim().max(MAX_QUERY_LENGTH);
 
+/**
+ * The answer depends on the query alone, so browsers and CDNs may reuse it.
+ * Kept short: during an outage the answer comes from keyword search.
+ */
+const CACHE_CONTROL = "public, max-age=60, stale-while-revalidate=300";
+const cached = { headers: { "Cache-Control": CACHE_CONTROL } };
+
 /** Framework-agnostic GET handler for search-as-you-type: `?q=` in, suggestions out. */
 export function createSearchHandler({
   search,
@@ -30,10 +37,10 @@ export function createSearchHandler({
     }
     const query = parsed.data;
     if (query.length < MIN_QUERY_LENGTH) {
-      return Response.json({
-        query,
-        products: [],
-      } satisfies SuggestionsResponse);
+      return Response.json(
+        { query, products: [] } satisfies SuggestionsResponse,
+        cached,
+      );
     }
 
     try {
@@ -57,7 +64,7 @@ export function createSearchHandler({
           imageUrl,
         })),
       };
-      return Response.json(body);
+      return Response.json(body, cached);
     } catch (error) {
       if (!(error instanceof SearchError)) throw error;
       console.error(error.message);

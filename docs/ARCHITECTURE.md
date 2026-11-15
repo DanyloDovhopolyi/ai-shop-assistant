@@ -43,6 +43,7 @@ ui/     React components: call model, never api
 - Catalog UI states use React and Next primitives: `<Suspense>` + skeleton for loading, `useTransition` (`isPending`) while a filter change navigates, `error.tsx` with `reset()` for errors.
 - TanStack Query owns data that lives on the client: search suggestions while typing (stage 4) and product details in chat cards (stage 3). Query keys and options come from one `queryOptions` factory per slice.
 - Client queries call this app's route handlers (`/api/products/[id]`), never upstream APIs, so adapters stay the only code that knows DummyJSON.
+- Caching, by what is safe to keep: the catalog (`'use cache'`, hours); query embeddings (`memoizeAsync`, in memory, LRU, deterministic so no expiry; concurrent calls share one request; failures are not kept); `/api/search` and `/api/products/[id]` responses (`Cache-Control`, minutes). Search results are not cached server-side: during an outage they come from keyword search and must not outlive it.
 - Retries happen in one place: TanStack Query on the client (`fetchJson` with `retries: 0` inside `queryFn`), `fetchJson` on the server.
 
 ## TypeScript
