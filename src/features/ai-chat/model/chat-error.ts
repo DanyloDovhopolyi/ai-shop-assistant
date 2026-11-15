@@ -2,11 +2,16 @@
  * Stable error codes sent to the client in place of raw provider errors, so the
  * UI can react to rate limiting without seeing keys, URLs, or stack traces.
  */
-export const CHAT_ERROR_CODES = ["rate-limited", "unavailable"] as const;
+export const CHAT_ERROR_CODES = [
+  "rate-limited",
+  "timeout",
+  "unavailable",
+] as const;
 export type ChatErrorCode = (typeof CHAT_ERROR_CODES)[number];
 
 const MESSAGES: Record<ChatErrorCode, string> = {
   "rate-limited": "The assistant is busy right now. Wait a moment and retry.",
+  timeout: "The assistant took too long to answer. Try again.",
   unavailable: "The assistant is unavailable. Try again.",
 };
 
@@ -20,11 +25,9 @@ export function toChatErrorCode(error: unknown): ChatErrorCode {
  * request) or as a code inside the stream (the provider refused mid-response).
  */
 export function describeChatError(error: Error): string {
-  const code: ChatErrorCode =
-    statusOf(error) === 429 || error.message === "rate-limited"
-      ? "rate-limited"
-      : "unavailable";
-  return MESSAGES[code];
+  if (statusOf(error) === 429) return MESSAGES["rate-limited"];
+  const code = CHAT_ERROR_CODES.find((known) => known === error.message);
+  return MESSAGES[code ?? "unavailable"];
 }
 
 /**

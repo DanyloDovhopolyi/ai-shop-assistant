@@ -37,6 +37,10 @@ describe("describeChatError", () => {
     expect(describeChatError(httpError)).toMatch(/wait/i);
   });
 
+  it("says the assistant was too slow when the server timed it out", () => {
+    expect(describeChatError(new Error("timeout"))).toMatch(/too long/i);
+  });
+
   it("shows a generic message for anything else", () => {
     expect(describeChatError(new Error("unavailable"))).toMatch(/unavailable/i);
   });
