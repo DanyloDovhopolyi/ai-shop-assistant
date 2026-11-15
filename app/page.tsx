@@ -14,13 +14,18 @@ import {
   FiltersNavigationProvider,
   FiltersPendingRegion,
   pageFromSearchParams,
+  queryFromSearchParams,
+  catalogHref,
   UrlFiltersPanel,
 } from "@/features/product-filters";
 import { paginate } from "@/shared/lib";
+import { Badge } from "@/shared/ui/badge";
 import { buttonVariants } from "@/shared/ui/button";
 
+import { CatalogSearch } from "./_components/catalog-search";
 import { ShopAssistant } from "./_components/shop-assistant";
 import { getCatalog } from "./_lib/catalog";
+import { searchCatalog } from "./_lib/search";
 
 export default function CatalogPage({ searchParams }: PageProps<"/">) {
   return (
@@ -42,6 +47,12 @@ export default function CatalogPage({ searchParams }: PageProps<"/">) {
               Filter by hand, or ask the assistant to do it for you.
             </p>
           </div>
+          {/* Needs only the URL, so it shows before the catalog has loaded. */}
+          <div className="mb-4">
+            <Suspense fallback={<SearchBoxPlaceholder />}>
+              <SearchFromUrl searchParams={searchParams} />
+            </Suspense>
+          </div>
           {/* searchParams are request-time data: the shell prerenders, the catalog streams in. */}
           <Suspense fallback={<ProductGridSkeleton />}>
             <FilteredCatalog searchParams={searchParams} />
@@ -55,6 +66,17 @@ export default function CatalogPage({ searchParams }: PageProps<"/">) {
   );
 }
 
+async function SearchFromUrl({
+  searchParams,
+}: Pick<PageProps<"/">, "searchParams">) {
+  return <CatalogSearch query={queryFromSearchParams(await searchParams)} />;
+}
+
+/** Same size as the search box, so nothing jumps when it hydrates. */
+function SearchBoxPlaceholder() {
+  return <div aria-hidden className="h-10 rounded-lg border bg-card" />;
+}
+
 async function FilteredCatalog({
   searchParams,
 }: Pick<PageProps<"/">, "searchParams">) {
@@ -63,15 +85,34 @@ async function FilteredCatalog({
   // and cached on the first request instead.
   const params = await searchParams;
   const filters = filtersFromSearchParams(params);
+  const query = queryFromSearchParams(params);
   const catalog = await getCatalog();
+  // A search narrows the catalog to matches in order of relevance; filters and
+  // sorting then apply on top ("Featured" keeps the relevance order).
+  const searched = query ? await searchCatalog(query, catalog) : null;
+  const base = searched?.kind === "found" ? searched.products : catalog;
   const results = paginate(
-    applyFilters(catalog, filters),
+    searched?.kind === "unavailable" ? [] : applyFilters(base, filters),
     pageFromSearchParams(params),
     CATALOG_PAGE_SIZE,
   );
 
   return (
     <>
+      {query && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Results for</span>
+          <Badge variant="secondary" className="text-sm font-normal">
+            {query}
+          </Badge>
+          <Link
+            href={catalogHref(filters, 1)}
+            className="text-sm underline-offset-4 hover:underline"
+          >
+            Clear search
+          </Link>
+        </div>
+      )}
       <div className="mb-6 border-b pb-5">
         <UrlFiltersPanel
           filters={filters}
@@ -79,9 +120,20 @@ async function FilteredCatalog({
         />
       </div>
       <FiltersPendingRegion>
-        {results.total === 0 ? (
+        {searched?.kind === "unavailable" ? (
           <div className="rounded-xl border border-dashed p-10 text-center">
-            <p className="font-medium">No products match these filters.</p>
+            <p className="font-medium">Search is unavailable right now.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Browse with the filters, or try searching again in a minute.
+            </p>
+          </div>
+        ) : results.total === 0 ? (
+          <div className="rounded-xl border border-dashed p-10 text-center">
+            <p className="font-medium">
+              {query
+                ? "Nothing matches this search with these filters."
+                : "No products match these filters."}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
               Widen the price range or pick another category.
             </p>
@@ -107,6 +159,7 @@ async function FilteredCatalog({
               filters={filters}
               page={results.page}
               pageCount={results.pageCount}
+              query={query}
             />
           </>
         )}

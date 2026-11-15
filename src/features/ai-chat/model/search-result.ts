@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { Product, ProductId } from "@/entities/product";
+import { pickProducts, type Product, type ProductId } from "@/entities/product";
 
 import type { ProductPreview } from "./filter-result";
 
@@ -56,10 +56,7 @@ export function toSearchResult(
   { query, minPrice, maxPrice }: SearchProductsInput,
   size = SEARCH_RESULT_SIZE,
 ): SearchResult {
-  const byId = new Map(catalog.map((product) => [product.id, product]));
-  const products = rankedIds
-    .map((id) => byId.get(id))
-    .filter((product) => product !== undefined)
+  const products = pickProducts(catalog, rankedIds)
     .filter(
       (product) =>
         (minPrice === undefined || product.price >= minPrice) &&

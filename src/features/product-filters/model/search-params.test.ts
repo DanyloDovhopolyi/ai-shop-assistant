@@ -4,6 +4,7 @@ import { DEFAULT_FILTERS, type ProductFilters } from "@/entities/product";
 
 import {
   catalogHref,
+  queryFromSearchParams,
   filtersFromSearchParams,
   filtersToSearchParams,
   pageFromSearchParams,
@@ -109,5 +110,23 @@ describe("catalogHref", () => {
     expect(
       filtersToSearchParams({ ...filters, minRating: 4 }).has("page"),
     ).toBe(false);
+  });
+});
+
+describe("search query in the URL", () => {
+  it("reads a trimmed query and ignores a blank one", () => {
+    expect(queryFromSearchParams({ q: "  warm gift " })).toBe("warm gift");
+    expect(queryFromSearchParams({ q: "   " })).toBe("");
+    expect(queryFromSearchParams({})).toBe("");
+  });
+
+  it("drops a query too long to be a real search", () => {
+    expect(queryFromSearchParams({ q: "x".repeat(201) })).toBe("");
+  });
+
+  it("keeps the query on every page of the results", () => {
+    expect(catalogHref(DEFAULT_FILTERS, 2, "warm gift")).toBe(
+      "?q=warm+gift&page=2",
+    );
   });
 });
