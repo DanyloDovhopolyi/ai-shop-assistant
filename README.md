@@ -2,6 +2,8 @@
 
 A product catalog with an AI assistant beside it. Ask in plain language ("laptops under $1500, best rated first", "a gift for a runner", "compare the AirPods with the Beats") and the assistant filters the catalog, searches it by meaning, or compares products, with the results rendered as UI in the chat.
 
+**Live demo: [ai-shop-assistant-portfolio.vercel.app](https://ai-shop-assistant-portfolio.vercel.app)**
+
 Built as a portfolio project to show **AI integration** (tool calling, generative UI, retrieval with embeddings, evals) and **production-grade engineering** (typed boundaries, ports and adapters, tests that target risk, graceful degradation).
 
 ![The assistant sets the catalog filters, marked "AI", and shows what it did under the hood](docs/images/chat-filters.png)
