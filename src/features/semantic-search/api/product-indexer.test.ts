@@ -12,9 +12,10 @@ const URL_BASE = "https://project.supabase.test";
 const TABLE_URL = `${URL_BASE}/rest/v1/product_embeddings`;
 const hash = (text: string) => `hash-of-${text.slice(0, 20)}`;
 
-const products = [1, 2, 3].map((id) =>
-  makeProduct({ id, title: `Product ${String(id)}` }),
-);
+const first = makeProduct({ id: 1, title: "Product 1" });
+const second = makeProduct({ id: 2, title: "Product 2" });
+const third = makeProduct({ id: 3, title: "Product 3" });
+const products = [first, second, third];
 
 /** A PostgREST table that already holds `indexed` rows and records every write. */
 function serveTable(indexed: { product_id: number; content_hash: string }[]) {
@@ -59,7 +60,7 @@ describe("indexProducts", () => {
   it("embeds only products that are new or changed, batch by batch", async () => {
     const table = serveTable([
       // Product 1 is indexed with its current text; product 2 with an old one.
-      { product_id: 1, content_hash: hash(toEmbeddingText(products[0]!)) },
+      { product_id: 1, content_hash: hash(toEmbeddingText(first)) },
       { product_id: 2, content_hash: "stale" },
     ]);
 
@@ -71,8 +72,8 @@ describe("indexProducts", () => {
       removed: 0,
     });
     expect(embedDocuments.mock.calls).toEqual([
-      [[toEmbeddingText(products[1]!)]],
-      [[toEmbeddingText(products[2]!)]],
+      [[toEmbeddingText(second)]],
+      [[toEmbeddingText(third)]],
     ]);
     // Waits between batches (rate limits), not before the first one.
     expect(beforeNextBatch).toHaveBeenCalledExactlyOnceWith({
