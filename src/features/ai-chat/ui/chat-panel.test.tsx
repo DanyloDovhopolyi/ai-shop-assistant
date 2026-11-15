@@ -262,4 +262,34 @@ describe("ChatPanel", () => {
     // A search answers in the chat; it does not change the catalog filters.
     expect(onFiltersApplied).not.toHaveBeenCalled();
   });
+
+  it("shows under the hood which tool ran, with what input, and what it cost", async () => {
+    serveProducts();
+    server.use(
+      http.post("*/api/chat", () =>
+        toolAnswer("filterProducts", laptopsUnder1500, "Three laptops fit.", {
+          input: { category: "laptops", maxPrice: 1500 },
+          metadata: {
+            model: "gemini-test",
+            durationMs: 1840,
+            inputTokens: 812,
+            outputTokens: 40,
+          },
+        }),
+      ),
+    );
+    const { user } = setup();
+
+    await ask(user, "laptops under 1500");
+    await user.click(
+      await screen.findByRole("button", { name: /under the hood/i }),
+    );
+
+    expect(screen.getByText("gemini-test")).toBeInTheDocument();
+    expect(screen.getByText("812 in, 40 out")).toBeInTheDocument();
+    expect(screen.getByText("filterProducts")).toBeInTheDocument();
+    expect(
+      screen.getByText('{"category":"laptops","maxPrice":1500}'),
+    ).toBeInTheDocument();
+  });
 });
