@@ -5,6 +5,7 @@ import { createChatHandler } from "@/features/ai-chat";
 import { ConfigError, getServerEnv } from "@/shared/config";
 
 import { getCatalog } from "../../_lib/catalog";
+import { getProductSearch } from "../../_lib/search";
 
 // Composition root for the chat: picks the model and reuses the cached catalog.
 // Fast, GA, and accurate on tool calls in a live comparison (see PR). Larger flash models
@@ -26,5 +27,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const model = createGoogleGenerativeAI({ apiKey })(CHAT_MODEL_ID);
-  return createChatHandler({ model, catalog })(request);
+  return createChatHandler({ model, catalog, search: getProductSearch() })(
+    request,
+  );
 }

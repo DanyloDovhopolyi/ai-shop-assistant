@@ -28,11 +28,13 @@ import { ComparisonTable } from "./comparison-table";
 import { ProductPreviewCard } from "./product-preview-card";
 import type { ChatMessage } from "../api/chat-handler";
 import { describeChatError } from "../model/chat-error";
-import type { FilterResult } from "../model/filter-result";
+import type { FilterResult, ProductPreview } from "../model/filter-result";
+import type { SearchResult } from "../model/search-result";
 
 type MessagePart = ChatMessage["parts"][number];
 type FilterToolPart = Extract<MessagePart, { type: "tool-filterProducts" }>;
 type CompareToolPart = Extract<MessagePart, { type: "tool-compareProducts" }>;
+type SearchToolPart = Extract<MessagePart, { type: "tool-searchProducts" }>;
 
 const EXAMPLES = [
   "Laptops under $1500",
@@ -91,7 +93,7 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
           </CardTitle>
           {/* col-start-1: the close action is hidden on desktop but still makes the header a two-column grid. */}
           <CardDescription className="col-start-1">
-            Say what you need. I&apos;ll set the filters.
+            Say what you need. I&apos;ll filter or search the catalog.
           </CardDescription>
           {onClose && (
             <CardAction className="lg:hidden">
@@ -227,6 +229,8 @@ function MessagePartView({ part }: { readonly part: MessagePart }) {
       return <p className="leading-relaxed whitespace-pre-wrap">{part.text}</p>;
     case "tool-filterProducts":
       return <FilterToolView part={part} />;
+    case "tool-searchProducts":
+      return <SearchToolView part={part} />;
     case "tool-compareProducts":
       return <CompareToolView part={part} />;
     case "step-start":
@@ -272,6 +276,43 @@ function FilterToolView({ part }: { readonly part: FilterToolPart }) {
     default:
       return assertNever(part);
   }
+}
+
+function SearchToolView({ part }: { readonly part: SearchToolPart }) {
+  switch (part.state) {
+    case "input-streaming":
+    case "input-available":
+      return <p className="text-xs text-muted-foreground">Searching…</p>;
+    case "output-available":
+      return <SearchResults result={part.output} />;
+    case "output-error":
+      return <p className="text-xs text-destructive">Search is unavailable.</p>;
+    case "approval-requested":
+    case "approval-responded":
+    case "output-denied":
+      // searchProducts needs no approval, so these states never occur.
+      return null;
+    default:
+      return assertNever(part);
+  }
+}
+
+function SearchResults({ result }: { readonly result: SearchResult }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="text-muted-foreground tabular-nums">
+          {result.products.length === 0
+            ? "No matches for"
+            : `${String(result.products.length)} matches for`}
+        </span>
+        <Badge variant="outline" className="bg-background font-normal">
+          {result.query}
+        </Badge>
+      </div>
+      <PreviewRow products={result.products} label="Search results" />
+    </div>
+  );
 }
 
 function CompareToolView({ part }: { readonly part: CompareToolPart }) {
@@ -324,19 +365,30 @@ function FilterSummary({ result }: { readonly result: FilterResult }) {
           </Badge>
         ))}
       </div>
-      {result.preview.length > 0 && (
-        <ul
-          aria-label="Top matches"
-          className="-mr-5 flex gap-2 overflow-x-auto pr-5 pb-1"
-        >
-          {result.preview.map((product) => (
-            <li key={product.id}>
-              <ProductPreviewCard product={product} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <PreviewRow products={result.preview} label="Top matches" />
     </div>
+  );
+}
+
+function PreviewRow({
+  products,
+  label,
+}: {
+  readonly products: readonly ProductPreview[];
+  readonly label: string;
+}) {
+  if (products.length === 0) return null;
+  return (
+    <ul
+      aria-label={label}
+      className="-mr-5 flex gap-2 overflow-x-auto pr-5 pb-1"
+    >
+      {products.map((product) => (
+        <li key={product.id}>
+          <ProductPreviewCard product={product} />
+        </li>
+      ))}
+    </ul>
   );
 }
 

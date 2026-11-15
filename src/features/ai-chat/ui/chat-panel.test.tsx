@@ -238,4 +238,28 @@ describe("ChatPanel", () => {
     expect(requests.get(String(budgetLaptop.id))).toBe(1);
     expect(requests.get(String(proLaptop.id))).toBe(1);
   });
+
+  it("shows what a search found as cards, with the query it searched for", async () => {
+    serveProducts();
+    server.use(
+      http.post("*/api/chat", () =>
+        toolAnswer(
+          "searchProducts",
+          { query: "laptop for travel", products: [previewOf(budgetLaptop)] },
+          "The Budget Laptop is light.",
+        ),
+      ),
+    );
+    const { onFiltersApplied, user } = setup();
+
+    await ask(user, "something light to work on the road");
+
+    const results = await screen.findByRole("list", { name: "Search results" });
+    expect(
+      within(results).getByRole("article", { name: "Budget Laptop" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("laptop for travel")).toBeInTheDocument();
+    // A search answers in the chat; it does not change the catalog filters.
+    expect(onFiltersApplied).not.toHaveBeenCalled();
+  });
 });
