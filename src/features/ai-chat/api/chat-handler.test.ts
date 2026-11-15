@@ -233,6 +233,46 @@ describe("chat handler", () => {
     expect(JSON.stringify(chunks)).not.toContain("AIza");
   });
 
+  it("refuses an oversized message before the model sees it", async () => {
+    const model = modelThatFilters({});
+    const handle = createChatHandler({ model, catalog, search: noSearch });
+
+    const response = await handle(chatRequest("x".repeat(1001)));
+
+    expect(response.status).toBe(400);
+    expect(model.doStreamCalls).toHaveLength(0);
+  });
+
+  it("caps the length of every answer", async () => {
+    const model = modelThatFilters({});
+    await readUiChunks(
+      await createChatHandler({ model, catalog, search: noSearch })(
+        chatRequest("hi"),
+      ),
+    );
+
+    expect(model.doStreamCalls[0]?.maxOutputTokens).toBe(600);
+  });
+
+  it("ends a stalled answer with an error instead of waiting forever", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const stalled = new MockLanguageModelV4({
+      doStream: () => new Promise(() => undefined),
+    });
+    const handle = createChatHandler({
+      model: stalled,
+      catalog,
+      search: noSearch,
+      timeouts: { firstChunkMs: 50, totalMs: 100 },
+    });
+
+    const chunks = await readUiChunks(await handle(chatRequest("hi")));
+
+    expect(chunks).toContainEqual(
+      expect.objectContaining({ type: "error", errorText: "timeout" }),
+    );
+  });
+
   it("rejects a malformed request with 400", async () => {
     const handle = createChatHandler({
       model: modelThatFilters({}),

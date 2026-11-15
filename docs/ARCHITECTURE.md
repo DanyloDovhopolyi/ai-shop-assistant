@@ -96,6 +96,8 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 - Render tool parts by `part.type` then `part.state`, exhaustively.
 - Route handler: validate messages with `safeValidateUIMessages` (400 on failure), pass `instructions` (`system` is deprecated in AI SDK 7), pass `request.signal` as `abortSignal`, cap steps with `stopWhen: isStepCount(n)`, return `createUIMessageStreamResponse`.
 - Client: expose `stop()`; on `error`, offer `regenerate()`; show 429 distinctly.
+- Scope and prompt injection are handled in layers: the system prompt limits the bot to shopping and treats user text and tool results as data; `limitChat` caps message length (1000) and history (20); `maxOutputTokens` caps answers; tools only read the catalog and take Zod-checked input; product descriptions never reach the model. Behaviour is checked against the real model by evals, not by unit tests of the prompt text.
+- Model calls time out (`firstChunkMs`, `totalMs`). The SDK reports a timeout as an abort; the handler turns an abort the user did not cause into a `timeout` error the chat can explain.
 - Paid or expensive routes are wrapped with `withRateLimit` (429 + `Retry-After`, per client IP). Limits live in `app/_lib/rate-limits.ts`. The `RateLimiter` port has an in-memory adapter (per instance); a shared-store adapter replaces it when the app runs on many instances.
 - Errors cross the wire as stable codes (`toChatErrorCode` in `onError`): the client can tell a rate limit apart, and provider details stay in the server log.
 

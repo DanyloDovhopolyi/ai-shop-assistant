@@ -29,6 +29,7 @@ import { ProductPreviewCard } from "./product-preview-card";
 import { RunDetailsPanel } from "./run-details-panel";
 import type { ChatMessage } from "../api/chat-handler";
 import { describeChatError } from "../model/chat-error";
+import { MAX_MESSAGE_LENGTH } from "../model/chat-limits";
 import type { FilterResult, ProductPreview } from "../model/filter-result";
 import { ChatMetadataSchema, describeRun } from "../model/run-details";
 import type { SearchResult } from "../model/search-result";
@@ -233,6 +234,8 @@ export function ChatPanel({
               }}
               placeholder="Headphones under $100, best rated first"
               autoComplete="off"
+              // Same limit the server enforces (MAX_MESSAGE_LENGTH).
+              maxLength={MAX_MESSAGE_LENGTH}
               className="h-10 flex-1 bg-card"
             />
             {busy ? (
