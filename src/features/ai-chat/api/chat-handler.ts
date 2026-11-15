@@ -15,6 +15,7 @@ import { z } from "zod";
 import { listCategories, type ProductCatalog } from "@/entities/product";
 
 import { createFilterProductsTool } from "./filter-products-tool";
+import { toChatErrorCode } from "../model/chat-error";
 import { buildSystemPrompt } from "../model/system-prompt";
 
 /** One tool round-trip plus the final answer; stops runaway tool loops. */
@@ -66,7 +67,14 @@ export function createChatHandler({ model, catalog }: ChatHandlerDeps) {
     });
 
     return createUIMessageStreamResponse({
-      stream: toUIMessageStream({ stream: result.stream }),
+      stream: toUIMessageStream({
+        stream: result.stream,
+        // The client gets a stable code; the real cause stays in the server log.
+        onError: (error) => {
+          console.error(error);
+          return toChatErrorCode(error);
+        },
+      }),
     });
   };
 }

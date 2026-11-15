@@ -18,17 +18,26 @@ import {
 } from "@/features/product-filters";
 import { paginate } from "@/shared/lib";
 
+import { ShopAssistant } from "./_components/shop-assistant";
 import { getCatalog } from "./_lib/catalog";
 
 export default function CatalogPage({ searchParams }: PageProps<"/">) {
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
       <h1 className="mb-6 text-2xl font-semibold">AI Shop Assistant</h1>
       <FiltersNavigationProvider>
-        {/* searchParams are request-time data: the shell prerenders, the catalog streams in. */}
-        <Suspense fallback={<ProductGridSkeleton />}>
-          <FilteredCatalog searchParams={searchParams} />
-        </Suspense>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          {/* First on mobile (the chat is the main way in), right column on desktop. */}
+          <aside className="lg:sticky lg:top-8 lg:order-last lg:self-start">
+            <ShopAssistant />
+          </aside>
+          <div className="min-w-0">
+            {/* searchParams are request-time data: the shell prerenders, the catalog streams in. */}
+            <Suspense fallback={<ProductGridSkeleton />}>
+              <FilteredCatalog searchParams={searchParams} />
+            </Suspense>
+          </div>
+        </div>
       </FiltersNavigationProvider>
     </main>
   );

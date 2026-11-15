@@ -11,4 +11,5 @@ export {
   FiltersNavigationProvider,
   FiltersPendingRegion,
   UrlFiltersPanel,
+  useFiltersNavigation,
 } from "./ui/filters-navigation";

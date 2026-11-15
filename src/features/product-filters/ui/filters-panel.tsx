@@ -3,16 +3,9 @@ import type { SubmitEvent } from "react";
 import {
   DEFAULT_FILTERS,
   type ProductFilters,
+  SORT_LABELS,
   SORT_ORDERS,
-  type SortOrder,
 } from "@/entities/product";
-
-const SORT_LABELS = {
-  featured: "Featured",
-  "price-asc": "Price: low to high",
-  "price-desc": "Price: high to low",
-  "rating-desc": "Best rated",
-} as const satisfies Record<SortOrder, string>;
 
 const RATING_OPTIONS = [3, 4, 4.5] as const;
 
