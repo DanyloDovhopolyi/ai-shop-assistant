@@ -1,6 +1,14 @@
 import Image from "next/image";
 
-import type { Product } from "../model/product";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardTitle,
+} from "@/shared/ui/card";
+
+import { formatCategory, type Product } from "../model/product";
 
 const usd = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -8,40 +16,39 @@ const usd = new Intl.NumberFormat("en-US", {
 });
 
 export function ProductCard({ product }: { readonly product: Product }) {
+  const titleId = `product-${String(product.id)}-title`;
   return (
-    <article
-      aria-labelledby={`product-${String(product.id)}-title`}
-      className="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-    >
-      <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800">
-        <Image
-          src={product.imageUrl}
-          alt={product.title}
-          fill
-          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-          className="object-contain p-4"
-        />
-      </div>
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <p className="text-xs tracking-wide text-zinc-500 uppercase">
-          {product.category}
-        </p>
-        <h2
-          id={`product-${String(product.id)}-title`}
-          className="line-clamp-2 text-sm font-medium"
-        >
-          {product.title}
-        </h2>
-        <div className="mt-auto flex items-center justify-between pt-2 text-sm">
-          <span className="font-semibold">{usd.format(product.price)}</span>
+    <article aria-labelledby={titleId} className="h-full">
+      <Card className="h-full gap-3 bg-transparent py-0 ring-0">
+        <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
+          <Image
+            src={product.imageUrl}
+            alt={product.title}
+            fill
+            sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 50vw"
+            className="object-contain p-6 mix-blend-multiply dark:mix-blend-normal"
+          />
+        </div>
+        <CardContent className="flex flex-1 flex-col gap-0.5 px-0">
+          <CardTitle id={titleId} className="line-clamp-2 text-[15px]">
+            {product.title}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            {product.brand ?? formatCategory(product.category)}
+          </CardDescription>
+        </CardContent>
+        <CardFooter className="items-baseline justify-between border-t-0 bg-transparent px-0 pt-0 pb-1">
+          <span className="text-base font-semibold tabular-nums">
+            {usd.format(product.price)}
+          </span>
           <span
-            className="text-zinc-500"
+            className="text-sm text-muted-foreground tabular-nums"
             aria-label={`Rated ${product.rating.toFixed(1)} out of 5`}
           >
             ★ {product.rating.toFixed(1)}
           </span>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </article>
   );
 }

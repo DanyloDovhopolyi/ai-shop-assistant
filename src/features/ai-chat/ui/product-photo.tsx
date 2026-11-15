@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 
 import { type ProductId, productQueries } from "@/entities/product";
+import { Skeleton } from "@/shared/ui/skeleton";
 
 /**
  * A product photo loaded by id. Every photo of one product shares a single
@@ -21,7 +22,7 @@ export function ProductPhoto({
   const details = useQuery(productQueries.detail(id));
 
   return (
-    <div className="relative flex aspect-square items-center justify-center bg-zinc-100 text-zinc-400 dark:bg-zinc-800">
+    <div className="relative flex aspect-square items-center justify-center bg-card text-muted-foreground">
       {details.isSuccess ? (
         <Image
           src={details.data.imageUrl}
@@ -33,7 +34,7 @@ export function ProductPhoto({
       ) : details.isError ? (
         <span className="text-[10px]">No photo</span>
       ) : (
-        <span aria-hidden className="size-full animate-pulse" />
+        <Skeleton aria-hidden className="size-full rounded-none" />
       )}
     </div>
   );

@@ -1,10 +1,28 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { AlertCircleIcon, XIcon } from "lucide-react";
 import { type SubmitEvent, useEffect, useRef, useState } from "react";
 
-import { type ProductFilters, SORT_LABELS } from "@/entities/product";
+import {
+  formatCategory,
+  type ProductFilters,
+  SORT_LABELS,
+} from "@/entities/product";
 import { assertNever } from "@/shared/lib";
+import { Alert, AlertAction, AlertDescription } from "@/shared/ui/alert";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import {
+  Card,
+  CardAction,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 
 import { ComparisonTable } from "./comparison-table";
 import { ProductPreviewCard } from "./product-preview-card";
@@ -25,9 +43,11 @@ const EXAMPLES = [
 export interface ChatPanelProps {
   /** Called once per answer that filtered the catalog, with the filters it used. */
   readonly onFiltersApplied: (filters: ProductFilters) => void;
+  /** Shows a close button on small screens, where the chat is a sheet. */
+  readonly onClose?: () => void;
 }
 
-export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
+export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status, stop, error, regenerate } =
     useChat<ChatMessage>({
@@ -39,12 +59,15 @@ export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
       },
     });
   const busy = status === "submitted" || status === "streaming";
-  const logRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Keep the newest message in view as answers stream in.
+  // Keep the newest message in view as answers stream in. ScrollArea scrolls
+  // its inner viewport, not the root the ref points at.
   useEffect(() => {
-    const log = logRef.current;
-    if (log) log.scrollTop = log.scrollHeight;
+    const viewport = scrollRef.current?.querySelector<HTMLElement>(
+      "[data-slot=scroll-area-viewport]",
+    );
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
   }, [messages, status]);
 
   const send = (text: string) => {
@@ -60,116 +83,140 @@ export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
   };
 
   return (
-    <section
-      aria-label="Shopping assistant"
-      className="flex h-[32rem] flex-col rounded-xl border border-zinc-200 bg-white lg:h-[calc(100dvh-8rem)] dark:border-zinc-800 dark:bg-zinc-950"
-    >
-      <header className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-        <h2 className="font-medium">Assistant</h2>
-        <p className="text-xs text-zinc-500">
-          Describe what you need; the catalog follows.
-        </p>
-      </header>
+    <section aria-label="Shopping assistant" className="h-full">
+      <Card className="h-full gap-0 py-0">
+        <CardHeader className="border-b pt-4">
+          <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+            <h2>Assistant</h2>
+          </CardTitle>
+          {/* col-start-1: the close action is hidden on desktop but still makes the header a two-column grid. */}
+          <CardDescription className="col-start-1">
+            Say what you need. I&apos;ll set the filters.
+          </CardDescription>
+          {onClose && (
+            <CardAction className="lg:hidden">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                aria-label="Close assistant"
+              >
+                <XIcon />
+              </Button>
+            </CardAction>
+          )}
+        </CardHeader>
 
-      <div
-        ref={logRef}
-        role="log"
-        aria-live="polite"
-        className="flex flex-1 flex-col gap-3 overflow-y-auto p-4"
-      >
-        {messages.length === 0 ? (
-          <ul className="flex flex-col gap-2" aria-label="Example requests">
-            {EXAMPLES.map((example) => (
-              <li key={example}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    send(example);
-                  }}
-                  className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
-                >
-                  {example}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          messages.map((message) => (
-            <article
-              key={message.id}
-              aria-label={message.role === "user" ? "You" : "Assistant"}
-              className={`flex flex-col gap-2 rounded-lg px-3 py-2 text-sm ${
-                message.role === "user"
-                  ? "max-w-[90%] self-end bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                  : // Full width: tables and card rows need the room.
-                    "w-full min-w-0 self-start bg-zinc-100 dark:bg-zinc-900"
-              }`}
-            >
-              {message.parts.map((part, index) => (
-                <MessagePartView
-                  // Parts have no id; their order within a message never changes.
-                  key={index}
-                  part={part}
-                />
-              ))}
-            </article>
-          ))
-        )}
-        {status === "submitted" && (
-          <p className="text-sm text-zinc-500">Thinking…</p>
-        )}
-        {error && (
+        <ScrollArea ref={scrollRef} className="min-h-0 flex-1">
           <div
-            role="alert"
-            className="flex items-center justify-between gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:text-red-400"
+            role="log"
+            aria-live="polite"
+            className="flex min-h-full flex-col gap-4 px-4 py-4"
           >
-            <span>{describeChatError(error)}</span>
-            <button
-              type="button"
-              onClick={() => void regenerate()}
-              className="font-medium underline"
-            >
-              Retry
-            </button>
+            {messages.length === 0 ? (
+              <div className="mt-auto flex flex-col gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Try one of these:
+                </p>
+                <ul
+                  className="flex flex-col gap-2"
+                  aria-label="Example requests"
+                >
+                  {EXAMPLES.map((example) => (
+                    <li key={example}>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          send(example);
+                        }}
+                        className="h-auto w-full justify-start py-2.5 font-normal"
+                      >
+                        {example}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <article
+                  key={message.id}
+                  aria-label={message.role === "user" ? "You" : "Assistant"}
+                  className={
+                    message.role === "user"
+                      ? "max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground"
+                      : // Full width, because tables and card rows need the room.
+                        "flex w-full min-w-0 flex-col gap-2.5 rounded-2xl rounded-bl-md bg-muted px-3.5 py-3 text-sm"
+                  }
+                >
+                  {message.parts.map((part, index) => (
+                    <MessagePartView
+                      // Parts have no id; their order within a message never changes.
+                      key={index}
+                      part={part}
+                    />
+                  ))}
+                </article>
+              ))
+            )}
+            {status === "submitted" && (
+              <p className="text-sm text-muted-foreground motion-safe:animate-pulse">
+                Thinking…
+              </p>
+            )}
+            {error && (
+              <Alert variant="destructive" role="alert">
+                <AlertCircleIcon />
+                <AlertDescription>{describeChatError(error)}</AlertDescription>
+                <AlertAction>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void regenerate()}
+                  >
+                    Retry
+                  </Button>
+                </AlertAction>
+              </Alert>
+            )}
           </div>
-        )}
-      </div>
+        </ScrollArea>
 
-      <form
-        onSubmit={submit}
-        className="flex gap-2 border-t border-zinc-200 p-3 dark:border-zinc-800"
-      >
-        <label htmlFor="chat-input" className="sr-only">
-          Message
-        </label>
-        <input
-          id="chat-input"
-          value={input}
-          onChange={(event) => {
-            setInput(event.target.value);
-          }}
-          placeholder="Headphones under $100, best rated first"
-          autoComplete="off"
-          className="min-w-0 flex-1 rounded-lg border border-zinc-300 bg-transparent px-3 py-2 text-sm dark:border-zinc-700"
-        />
-        {busy ? (
-          <button
-            type="button"
-            onClick={() => void stop()}
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-700"
-          >
-            Stop
-          </button>
-        ) : (
-          <button
-            type="submit"
-            disabled={!input.trim()}
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm text-white disabled:opacity-40 dark:bg-zinc-100 dark:text-zinc-900"
-          >
-            Send
-          </button>
-        )}
-      </form>
+        <CardFooter className="p-3">
+          <form onSubmit={submit} className="flex w-full gap-2">
+            <label htmlFor="chat-input" className="sr-only">
+              Message
+            </label>
+            <Input
+              id="chat-input"
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value);
+              }}
+              placeholder="Headphones under $100, best rated first"
+              autoComplete="off"
+              className="h-10 flex-1 bg-card"
+            />
+            {busy ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10"
+                onClick={() => void stop()}
+              >
+                Stop
+              </Button>
+            ) : (
+              <Button type="submit" disabled={!input.trim()} className="h-10">
+                Send
+              </Button>
+            )}
+          </form>
+        </CardFooter>
+      </Card>
     </section>
   );
 }
@@ -177,7 +224,7 @@ export function ChatPanel({ onFiltersApplied }: ChatPanelProps) {
 function MessagePartView({ part }: { readonly part: MessagePart }) {
   switch (part.type) {
     case "text":
-      return <p className="whitespace-pre-wrap">{part.text}</p>;
+      return <p className="leading-relaxed whitespace-pre-wrap">{part.text}</p>;
     case "tool-filterProducts":
       return <FilterToolView part={part} />;
     case "tool-compareProducts":
@@ -208,12 +255,12 @@ function FilterToolView({ part }: { readonly part: FilterToolPart }) {
   switch (part.state) {
     case "input-streaming":
     case "input-available":
-      return <p className="text-xs text-zinc-500">Filtering the catalog…</p>;
+      return <p className="text-xs text-muted-foreground">Setting filters…</p>;
     case "output-available":
       return <FilterSummary result={part.output} />;
     case "output-error":
       return (
-        <p className="text-xs text-red-600 dark:text-red-400">
+        <p className="text-xs text-destructive">
           Could not apply these filters.
         </p>
       );
@@ -231,12 +278,14 @@ function CompareToolView({ part }: { readonly part: CompareToolPart }) {
   switch (part.state) {
     case "input-streaming":
     case "input-available":
-      return <p className="text-xs text-zinc-500">Comparing products…</p>;
+      return (
+        <p className="text-xs text-muted-foreground">Comparing products…</p>
+      );
     case "output-available":
       return <ComparisonTable comparison={part.output} />;
     case "output-error":
       return (
-        <p className="text-xs text-red-600 dark:text-red-400">
+        <p className="text-xs text-destructive">
           Could not compare these products.
         </p>
       );
@@ -253,7 +302,7 @@ function CompareToolView({ part }: { readonly part: CompareToolPart }) {
 function FilterSummary({ result }: { readonly result: FilterResult }) {
   const { category, minPrice, maxPrice, minRating, sort } = result.filters;
   const chips = [
-    category,
+    category === undefined ? undefined : formatCategory(category),
     priceRange(minPrice, maxPrice),
     minRating === undefined ? undefined : `${String(minRating)}★ and up`,
     sort === "featured" ? undefined : SORT_LABELS[sort],
@@ -261,23 +310,24 @@ function FilterSummary({ result }: { readonly result: FilterResult }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-1 text-xs">
-        <span className="text-zinc-500">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <span className="text-muted-foreground tabular-nums">
           {result.total} {result.total === 1 ? "product" : "products"}
         </span>
         {chips.map((chip) => (
-          <span
+          <Badge
             key={chip}
-            className="rounded-full bg-white px-2 py-0.5 dark:bg-zinc-800"
+            variant="outline"
+            className="bg-background font-normal"
           >
             {chip}
-          </span>
+          </Badge>
         ))}
       </div>
       {result.preview.length > 0 && (
         <ul
           aria-label="Top matches"
-          className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
+          className="-mr-5 flex gap-2 overflow-x-auto pr-5 pb-1"
         >
           {result.preview.map((product) => (
             <li key={product.id}>

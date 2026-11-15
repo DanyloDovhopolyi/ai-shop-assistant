@@ -1,7 +1,10 @@
+import { Skeleton } from "@/shared/ui/skeleton";
+
 import { ProductCard } from "./product-card";
 import type { Product } from "../model/product";
 
-const gridClassName = "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4";
+const gridClassName =
+  "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4";
 
 export function ProductGrid({
   products,
@@ -31,10 +34,9 @@ export function ProductGridSkeleton({
       className={gridClassName}
     >
       {Array.from({ length: count }, (_, index) => (
-        <li
-          key={index}
-          className="aspect-[3/4] animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800"
-        />
+        <li key={index}>
+          <Skeleton className="aspect-[3/4] rounded-xl" />
+        </li>
       ))}
     </ul>
   );
