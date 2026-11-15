@@ -8,3 +8,4 @@ export {
   TimeoutError,
 } from "./errors";
 export { fetchJson, type FetchJsonOptions } from "./fetch-json";
+export type { Database, Json } from "./database.types";
