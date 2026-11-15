@@ -2,9 +2,11 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 import type { ProductCatalog } from "@/entities/product";
 import { createChatHandler } from "@/features/ai-chat";
+import { withRateLimit } from "@/shared/api";
 import { ConfigError, getServerEnv } from "@/shared/config";
 
 import { getCatalog } from "../../_lib/catalog";
+import { chatRateLimiter } from "../../_lib/rate-limits";
 import { getProductSearch } from "../../_lib/search";
 
 // Composition root for the chat: picks the model and reuses the cached catalog.
@@ -13,7 +15,9 @@ import { getProductSearch } from "../../_lib/search";
 const CHAT_MODEL_ID = "gemini-3.1-flash-lite";
 const catalog: ProductCatalog = { list: () => getCatalog() };
 
-export async function POST(request: Request): Promise<Response> {
+export const POST = withRateLimit(handleChat, { limiter: chatRateLimiter });
+
+async function handleChat(request: Request): Promise<Response> {
   let apiKey: string;
   try {
     apiKey = getServerEnv().GOOGLE_GENERATIVE_AI_API_KEY;

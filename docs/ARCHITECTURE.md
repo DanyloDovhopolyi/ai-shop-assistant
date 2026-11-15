@@ -96,6 +96,7 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 - Render tool parts by `part.type` then `part.state`, exhaustively.
 - Route handler: validate messages with `safeValidateUIMessages` (400 on failure), pass `instructions` (`system` is deprecated in AI SDK 7), pass `request.signal` as `abortSignal`, cap steps with `stopWhen: isStepCount(n)`, return `createUIMessageStreamResponse`.
 - Client: expose `stop()`; on `error`, offer `regenerate()`; show 429 distinctly.
+- Paid or expensive routes are wrapped with `withRateLimit` (429 + `Retry-After`, per client IP). Limits live in `app/_lib/rate-limits.ts`. The `RateLimiter` port has an in-memory adapter (per instance); a shared-store adapter replaces it when the app runs on many instances.
 - Errors cross the wire as stable codes (`toChatErrorCode` in `onError`): the client can tell a rate limit apart, and provider details stay in the server log.
 
 ## Testing (TDD)
