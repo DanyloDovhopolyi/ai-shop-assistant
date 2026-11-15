@@ -10,6 +10,14 @@ const ServerEnvSchema = z.object({
 
 export type ServerEnv = z.infer<typeof ServerEnvSchema>;
 
+/** Semantic search is optional: without these, only the search feature fails. */
+const SupabaseEnvSchema = z.object({
+  SUPABASE_URL: z.url(),
+  SUPABASE_SECRET_KEY: z.string().min(1),
+});
+
+export type SupabaseEnv = z.infer<typeof SupabaseEnvSchema>;
+
 export class ConfigError extends AppError {
   readonly kind = "config";
 }
@@ -21,7 +29,20 @@ export class ConfigError extends AppError {
 export function getServerEnv(
   source: Record<string, string | undefined> = process.env,
 ): ServerEnv {
-  const parsed = ServerEnvSchema.safeParse(source);
+  return parseEnv(ServerEnvSchema, source);
+}
+
+export function getSupabaseEnv(
+  source: Record<string, string | undefined> = process.env,
+): SupabaseEnv {
+  return parseEnv(SupabaseEnvSchema, source);
+}
+
+function parseEnv<T>(
+  schema: z.ZodType<T>,
+  source: Record<string, string | undefined>,
+): T {
+  const parsed = schema.safeParse(source);
   if (!parsed.success) {
     throw new ConfigError(
       `Invalid server environment (see .env.example):\n${z.prettifyError(parsed.error)}`,

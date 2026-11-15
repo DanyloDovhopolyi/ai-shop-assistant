@@ -1,1 +1,7 @@
-export { ConfigError, getServerEnv, type ServerEnv } from "./env";
+export {
+  ConfigError,
+  getServerEnv,
+  getSupabaseEnv,
+  type ServerEnv,
+  type SupabaseEnv,
+} from "./env";

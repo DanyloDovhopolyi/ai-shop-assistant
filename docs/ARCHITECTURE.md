@@ -73,6 +73,15 @@ Goal: replacing any adapter (data source, LLM provider, search engine) changes o
 - Slices talk only through public APIs (`index.ts`) and Zod-defined data. Changing a slice's internals never breaks another slice.
 - `ProductCatalog` port (`entities/product`): lists the whole catalog. Adapters: DummyJSON, in-memory.
 - `ProductSearch` port (stage 4): free-text query to products. Adapters: pgvector, keyword fallback (stage 6).
+- Embeddings are injected as functions (`EmbedQuery`, `EmbedDocuments`); `createGeminiEmbeddings` is the only code that knows the embedding model.
+
+## Database (Supabase)
+
+- Schema changes are SQL files in `supabase/migrations/`, applied to the project through the Supabase MCP server. Regenerate `src/shared/api/database.types.ts` after each migration.
+- Every table in `public` has RLS enabled. Server-only tables (`product_embeddings`) have no policies and revoked `anon`/`authenticated` grants; the server reaches them with the secret key (`SUPABASE_SECRET_KEY`, never `NEXT_PUBLIC_`).
+- Functions run as `security invoker` with an empty `search_path` and are granted to `service_role` only.
+- Vectors cross PostgREST in pgvector's text form (`"[0.1,0.2]"`).
+- `npm run index:products` syncs embeddings with the catalog; it re-embeds only products whose text changed (content hash).
 - Adapters translate upstream wire formats into domain types (anti-corruption layer): a DTO schema in `api/` maps into the domain schema in `model/`.
 - The LLM is a dependency: `LanguageModel` from the AI SDK, so Gemini swaps for any provider; tests use `MockLanguageModelV4` from `ai/test`.
 

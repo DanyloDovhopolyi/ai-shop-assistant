@@ -6,3 +6,9 @@ coverage
 package-lock.json
 next-env.d.ts
 .vitest
+
+# Vendored agent skills: keep them byte-for-byte as published
+.claude/skills
+skills-lock.json
+# Generated from the database
+src/shared/api/database.types.ts
