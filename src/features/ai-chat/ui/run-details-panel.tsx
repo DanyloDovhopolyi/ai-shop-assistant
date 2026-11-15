@@ -62,7 +62,7 @@ export function RunDetailsPanel({ run }: { readonly run: RunDetails }) {
                     {tool.name}
                   </span>
                   {!tool.ok && <span className="ml-1">(failed)</span>}
-                  <pre className="mt-0.5 overflow-x-auto font-mono text-[11px] whitespace-pre-wrap">
+                  <pre className="mt-0.5 font-mono text-[11px] break-all whitespace-pre-wrap">
                     {JSON.stringify(tool.input)}
                   </pre>
                 </div>
