@@ -37,6 +37,7 @@ ui/     React components: call model, never api
 
 - Server Components by default. `"use client"` only for interactive leaves (filter controls, chat), placed as low in the tree as possible.
 - Filters live in URL `searchParams`. The server page parses them, filters the cached catalog, and renders the grid. Client controls only update the URL.
+- A search lives in the URL too (`?q=`). The page narrows the catalog to semantic matches in relevance order, then filters apply on top. A new search starts with no filters, filters set by hand keep the search, and the assistant's filters clear it.
 - Catalog data: `'use cache'` + `cacheLife`. Throw inside cached functions on failure so errors are never cached.
 - The build never calls upstream APIs: a page awaits request data (`searchParams`) before cached upstream calls, so prerendering stops first and an outage cannot fail a deploy. The composition root for each route lives in `app/_lib/`.
 - Catalog UI states use React and Next primitives: `<Suspense>` + skeleton for loading, `useTransition` (`isPending`) while a filter change navigates, `error.tsx` with `reset()` for errors.

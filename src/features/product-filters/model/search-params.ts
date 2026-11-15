@@ -77,13 +77,26 @@ export function pageFromSearchParams(params: SearchParamsRecord): number {
   return PageSchema.parse(firstNonEmpty(params.page) ?? 1);
 }
 
+const MAX_QUERY_LENGTH = 200;
+
+/** The `q` search text; blank or oversized means "no search". */
+export function queryFromSearchParams(params: SearchParamsRecord): string {
+  const query = firstNonEmpty(params.q)?.trim() ?? "";
+  return query.length > MAX_QUERY_LENGTH ? "" : query;
+}
+
 /**
- * Query string for a page of filtered results. Page 1 is left out so the
- * canonical URL of a filter set has no page parameter.
+ * Query string for a page of filtered (and possibly searched) results. Page 1
+ * is left out so the canonical URL of a filter set has no page parameter.
  */
-export function catalogHref(filters: ProductFilters, page: number): string {
+export function catalogHref(
+  filters: ProductFilters,
+  page: number,
+  query = "",
+): string {
   const params = filtersToSearchParams(filters);
+  if (query !== "") params.set("q", query);
   if (page > 1) params.set("page", String(page));
-  const query = params.toString();
-  return query ? `?${query}` : "?";
+  const href = params.toString();
+  return href ? `?${href}` : "?";
 }

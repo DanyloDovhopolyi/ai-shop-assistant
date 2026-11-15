@@ -15,6 +15,8 @@ export interface CatalogPaginationProps {
   readonly filters: ProductFilters;
   readonly page: number;
   readonly pageCount: number;
+  /** Search text to keep on every page. */
+  readonly query?: string;
 }
 
 /** Real links, so pages are crawlable, open in new tabs, and get prefetched. */
@@ -22,6 +24,7 @@ export function CatalogPagination({
   filters,
   page,
   pageCount,
+  query = "",
 }: CatalogPaginationProps) {
   if (pageCount <= 1) return null;
 
@@ -31,7 +34,7 @@ export function CatalogPagination({
         <PaginationItem>
           <PageLink
             label="Previous page"
-            href={page > 1 ? catalogHref(filters, page - 1) : null}
+            href={page > 1 ? catalogHref(filters, page - 1, query) : null}
           >
             <ChevronLeftIcon data-icon="inline-start" />
             Previous
@@ -45,7 +48,9 @@ export function CatalogPagination({
         <PaginationItem>
           <PageLink
             label="Next page"
-            href={page < pageCount ? catalogHref(filters, page + 1) : null}
+            href={
+              page < pageCount ? catalogHref(filters, page + 1, query) : null
+            }
           >
             Next
             <ChevronRightIcon data-icon="inline-end" />
