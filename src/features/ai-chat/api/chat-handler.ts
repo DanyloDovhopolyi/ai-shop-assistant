@@ -17,7 +17,9 @@ import { listCategories, type ProductCatalog } from "@/entities/product";
 
 import { createCompareProductsTool } from "./compare-products-tool";
 import { createFilterProductsTool } from "./filter-products-tool";
+import { createSearchProductsTool } from "./search-products-tool";
 import { toChatErrorCode } from "../model/chat-error";
+import type { ProductMatcher } from "../model/search-result";
 import { buildSystemPrompt } from "../model/system-prompt";
 
 /** Find, then compare, then answer; stops runaway tool loops. */
@@ -28,11 +30,16 @@ const ChatRequestSchema = z.object({ messages: z.array(z.unknown()).min(1) });
 export interface ChatHandlerDeps {
   readonly model: LanguageModel;
   readonly catalog: ProductCatalog;
+  readonly search: ProductMatcher;
 }
 
-function createChatTools({ catalog }: Pick<ChatHandlerDeps, "catalog">) {
+function createChatTools({
+  catalog,
+  search,
+}: Pick<ChatHandlerDeps, "catalog" | "search">) {
   return {
     filterProducts: createFilterProductsTool({ catalog }),
+    searchProducts: createSearchProductsTool({ catalog, search }),
     compareProducts: createCompareProductsTool({ catalog }),
   } satisfies ToolSet;
 }
@@ -41,8 +48,8 @@ export type ChatTools = InferUITools<ReturnType<typeof createChatTools>>;
 export type ChatMessage = UIMessage<never, UIDataTypes, ChatTools>;
 
 /** Framework-agnostic POST handler: Request in, streamed UI messages out. */
-export function createChatHandler({ model, catalog }: ChatHandlerDeps) {
-  const tools = createChatTools({ catalog });
+export function createChatHandler({ model, catalog, search }: ChatHandlerDeps) {
+  const tools = createChatTools({ catalog, search });
 
   return async function handleChat(request: Request): Promise<Response> {
     const body = ChatRequestSchema.safeParse(

@@ -2,7 +2,10 @@ import { APICallError } from "ai";
 import { MockLanguageModelV4, mockValues } from "ai/test";
 import { describe, expect, it, vi } from "vitest";
 
-import { createInMemoryProductCatalog } from "@/entities/product";
+import {
+  createInMemoryProductCatalog,
+  ProductIdSchema,
+} from "@/entities/product";
 
 import { textTurn, toolCallTurn } from "@test/ai/mock-stream";
 import { readUiChunks } from "@test/ai/read-ui-chunks";
@@ -20,6 +23,8 @@ const catalog = createInMemoryProductCatalog([
   makeProduct({ id: 2, title: "Pro Laptop", category: "laptops", price: 2400 }),
   makeProduct({ id: 3, title: "Phone", category: "smartphones", price: 700 }),
 ]);
+
+const noSearch = { search: () => Promise.resolve([]) };
 
 function chatRequest(text: string, init: RequestInit = {}) {
   return new Request("http://localhost/api/chat", {
@@ -49,6 +54,7 @@ describe("chat handler", () => {
     const handle = createChatHandler({
       model: modelThatFilters({ category: "laptops", maxPrice: 1500 }),
       catalog,
+      search: noSearch,
     });
 
     const chunks = await readUiChunks(
@@ -73,6 +79,7 @@ describe("chat handler", () => {
     const handle = createChatHandler({
       model: modelThatFilters({ minPrice: 500, maxPrice: 100 }),
       catalog,
+      search: noSearch,
     });
 
     const chunks = await readUiChunks(
@@ -91,6 +98,7 @@ describe("chat handler", () => {
     const handle = createChatHandler({
       model: modelThatCalls("compareProducts", { productIds: [3, 1] }),
       catalog,
+      search: noSearch,
     });
 
     const chunks = await readUiChunks(
@@ -111,10 +119,49 @@ describe("chat handler", () => {
     );
   });
 
+  it("searches by meaning and streams the matching products", async () => {
+    const search = {
+      search: vi.fn(() =>
+        Promise.resolve([
+          { id: ProductIdSchema.parse(3) },
+          { id: ProductIdSchema.parse(1) },
+        ]),
+      ),
+    };
+    const handle = createChatHandler({
+      model: modelThatCalls("searchProducts", {
+        query: "something to call mom",
+      }),
+      catalog,
+      search,
+    });
+
+    const chunks = await readUiChunks(await handle(chatRequest("phone?")));
+
+    expect(search.search).toHaveBeenCalledWith(
+      "something to call mom",
+      expect.objectContaining({ limit: expect.any(Number) as unknown }),
+    );
+    expect(chunks).toContainEqual(
+      expect.objectContaining({
+        type: "tool-output-available",
+        output: {
+          query: "something to call mom",
+          products: [
+            expect.objectContaining({ title: "Phone" }),
+            expect.objectContaining({ title: "Budget Laptop" }),
+          ],
+        },
+      }),
+    );
+  });
+
   it("tells the model which categories exist so it picks real ones", async () => {
     const model = modelThatFilters({});
     await readUiChunks(
-      await createChatHandler({ model, catalog })(chatRequest("hi")),
+      await createChatHandler({ model, catalog, search: noSearch })(
+        chatRequest("hi"),
+      ),
     );
 
     expect(JSON.stringify(model.doStreamCalls[0]?.prompt)).toContain(
@@ -126,9 +173,11 @@ describe("chat handler", () => {
     const model = modelThatFilters({});
     const client = new AbortController();
 
-    const response = await createChatHandler({ model, catalog })(
-      chatRequest("hi", { signal: client.signal }),
-    );
+    const response = await createChatHandler({
+      model,
+      catalog,
+      search: noSearch,
+    })(chatRequest("hi", { signal: client.signal }));
     client.abort();
     await response.text().catch(() => undefined);
 
@@ -151,7 +200,9 @@ describe("chat handler", () => {
     });
 
     const chunks = await readUiChunks(
-      await createChatHandler({ model, catalog })(chatRequest("hi")),
+      await createChatHandler({ model, catalog, search: noSearch })(
+        chatRequest("hi"),
+      ),
     );
 
     expect(chunks).toContainEqual({ type: "error", errorText: "rate-limited" });
@@ -159,7 +210,11 @@ describe("chat handler", () => {
   });
 
   it("rejects a malformed request with 400", async () => {
-    const handle = createChatHandler({ model: modelThatFilters({}), catalog });
+    const handle = createChatHandler({
+      model: modelThatFilters({}),
+      catalog,
+      search: noSearch,
+    });
 
     const response = await handle(
       new Request("http://localhost/api/chat", {
