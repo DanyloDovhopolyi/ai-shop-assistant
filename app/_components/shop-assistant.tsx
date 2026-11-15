@@ -8,6 +8,9 @@ import { ChatPanel } from "@/features/ai-chat";
 import { useFiltersNavigation } from "@/features/product-filters";
 import { cn } from "@/shared/lib";
 
+// Written out in full so Tailwind finds and generates them.
+const SCROLL_LOCK = ["max-lg:overflow-hidden", "max-lg:overscroll-none"];
+
 /**
  * Connects two slices that must not import each other: the chat reports the
  * filters it applied, and the filters slice writes them to the URL.
@@ -23,11 +26,16 @@ export function ShopAssistant() {
   useEffect(() => {
     if (!open) return;
     document.getElementById("chat-input")?.focus();
+    // The sheet is modal: freeze the catalog behind it. The class is scoped to
+    // small screens, so widening the window past the breakpoint scrolls again.
+    const root = document.documentElement;
+    root.classList.add(...SCROLL_LOCK);
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => {
+      root.classList.remove(...SCROLL_LOCK);
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [open]);
