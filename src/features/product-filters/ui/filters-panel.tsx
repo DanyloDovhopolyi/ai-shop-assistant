@@ -129,7 +129,7 @@ export function FiltersPanel({
           <InputGroup
             className={cn(
               "w-28 bg-card",
-              byAssistant(key) && "border-assistant bg-assistant-soft",
+              byAssistant(key) && "border-foreground/50",
             )}
           >
             <InputGroupAddon>
@@ -199,14 +199,10 @@ export function FiltersPanel({
       <button type="submit" hidden />
       <div className="ml-auto flex items-center gap-3">
         {assistantKeys.size > 0 && (
-          <Badge
-            id={ASSISTANT_LEGEND_ID}
-            variant="outline"
-            className="border-assistant/40 text-assistant"
-          >
-            <span aria-hidden className="size-1.5 rounded-full bg-assistant" />
+          // Read as the description of every field the assistant set.
+          <span id={ASSISTANT_LEGEND_ID} className="sr-only">
             Set by the assistant
-          </Badge>
+          </span>
         )}
         <Button
           type="button"
@@ -257,7 +253,7 @@ function FilterSelect({
         className={cn(
           "bg-card",
           className,
-          highlighted && "border-assistant bg-assistant-soft",
+          highlighted && "border-foreground/50",
         )}
       >
         <SelectValue />
@@ -274,8 +270,8 @@ function FilterSelect({
 }
 
 /**
- * A labelled control. Filters the assistant set wear its colour, so the user
- * can see at a glance what the assistant changed and what they chose.
+ * A labelled control. Filters the assistant set get an "AI" mark and a darker
+ * border, so the user sees what the assistant changed and what they chose.
  */
 function Field({
   label,
@@ -290,15 +286,21 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label
-        htmlFor={htmlFor}
-        className={cn(
-          "text-xs text-muted-foreground",
-          byAssistant && "text-assistant",
+      <div className="flex items-center gap-1.5">
+        <label htmlFor={htmlFor} className="text-xs text-muted-foreground">
+          {label}
+        </label>
+        {byAssistant && (
+          <Badge
+            variant="secondary"
+            aria-hidden
+            title="Set by the assistant"
+            className="h-4 px-1.5 text-[10px]"
+          >
+            AI
+          </Badge>
         )}
-      >
-        {label}
-      </label>
+      </div>
       {children}
     </div>
   );

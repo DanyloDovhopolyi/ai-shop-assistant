@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { formatCategory, type ProductId } from "@/entities/product";
+import { Badge } from "@/shared/ui/badge";
 import {
   Table,
   TableBody,
@@ -85,9 +86,9 @@ export function ComparisonTable({
                 >
                   {row.value(product)}
                   {row.best?.includes(product.id) && (
-                    <span className="mt-0.5 block w-fit rounded bg-best-soft px-1 text-[10px] font-medium text-best">
+                    <Badge className="mt-1 flex h-4 w-fit px-1.5 text-[10px]">
                       Best
-                    </span>
+                    </Badge>
                   )}
                 </TableCell>
               ))}

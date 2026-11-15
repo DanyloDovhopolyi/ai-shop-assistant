@@ -1,19 +1,11 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
+import { Geist } from "next/font/google";
 
 import { Providers } from "./_components/providers";
 import "./globals.css";
 
-// Headings: a grotesque with character. Body and prices: a plain, legible sans
-// with tabular figures, so price columns line up.
-const display = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
-  axes: ["opsz", "wdth"],
-});
-
-const body = Public_Sans({
-  variable: "--font-public-sans",
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
@@ -25,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} h-full`}>
+    <html lang="en" className={`${geistSans.variable} h-full`}>
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
       </body>

@@ -87,7 +87,6 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
       <Card className="h-full gap-0 py-0">
         <CardHeader className="border-b pt-4">
           <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-            <span aria-hidden className="size-2.5 rounded-full bg-assistant" />
             <h2>Assistant</h2>
           </CardTitle>
           {/* col-start-1: the close action is hidden on desktop but still makes the header a two-column grid. */}
@@ -132,7 +131,7 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
                         onClick={() => {
                           send(example);
                         }}
-                        className="h-auto w-full justify-start py-2.5 hover:border-assistant hover:text-assistant"
+                        className="h-auto w-full justify-start py-2.5 font-normal"
                       >
                         {example}
                       </Button>
@@ -148,9 +147,8 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
                   className={
                     message.role === "user"
                       ? "max-w-[85%] self-end rounded-2xl rounded-br-md bg-primary px-3.5 py-2 text-sm text-primary-foreground"
-                      : // The assistant's voice: no bubble, its colour on the edge.
-                        // Full width, because tables and card rows need the room.
-                        "flex w-full min-w-0 flex-col gap-2.5 border-l-2 border-assistant pl-3 text-sm"
+                      : // Full width, because tables and card rows need the room.
+                        "flex w-full min-w-0 flex-col gap-2.5 rounded-2xl rounded-bl-md bg-muted px-3.5 py-3 text-sm"
                   }
                 >
                   {message.parts.map((part, index) => (
@@ -164,7 +162,7 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
               ))
             )}
             {status === "submitted" && (
-              <p className="border-l-2 border-assistant/40 pl-3 text-sm text-muted-foreground motion-safe:animate-pulse">
+              <p className="text-sm text-muted-foreground motion-safe:animate-pulse">
                 Thinking…
               </p>
             )}
@@ -212,11 +210,7 @@ export function ChatPanel({ onFiltersApplied, onClose }: ChatPanelProps) {
                 Stop
               </Button>
             ) : (
-              <Button
-                type="submit"
-                disabled={!input.trim()}
-                className="h-10 bg-assistant text-assistant-foreground hover:bg-assistant/90"
-              >
+              <Button type="submit" disabled={!input.trim()} className="h-10">
                 Send
               </Button>
             )}
@@ -320,11 +314,11 @@ function FilterSummary({ result }: { readonly result: FilterResult }) {
         <span className="text-muted-foreground tabular-nums">
           {result.total} {result.total === 1 ? "product" : "products"}
         </span>
-        {/* Same colour as the filters it set in the panel: one visual link. */}
         {chips.map((chip) => (
           <Badge
             key={chip}
-            className="bg-assistant-soft font-normal text-assistant"
+            variant="outline"
+            className="bg-background font-normal"
           >
             {chip}
           </Badge>

@@ -45,7 +45,7 @@ export function ShopAssistant() {
         onClick={() => {
           setOpen(true);
         }}
-        className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-2.5 rounded-full bg-assistant px-5 py-3.5 text-left text-assistant-foreground shadow-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:hidden"
+        className="fixed inset-x-4 bottom-4 z-30 flex items-center gap-2.5 rounded-full bg-primary px-5 py-3.5 text-left text-primary-foreground shadow-lg focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:hidden"
       >
         <MessageCircleIcon aria-hidden className="size-5" />
         <span className="font-medium">Ask the assistant</span>

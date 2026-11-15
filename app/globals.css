@@ -6,71 +6,56 @@
 @custom-variant dark (@media (prefers-color-scheme: dark));
 
 /*
- * Palette: a cool sage canvas that keeps product photos neutral, a deep green
- * ink for text, and one ultramarine that belongs to the assistant alone: its
- * messages and every filter it sets. Nothing else uses that colour.
+ * shadcn's neutral palette, unchanged: a store lets product photos carry the
+ * colour, so the interface stays black, white and grey.
  */
 :root {
   --radius: 0.625rem;
-
-  --background: #f3f5f4; /* canvas */
-  --foreground: #12312b; /* ink */
-  --card: #ffffff;
-  --card-foreground: #12312b;
-  --popover: #ffffff;
-  --popover-foreground: #12312b;
-  --primary: #12312b;
-  --primary-foreground: #f3f5f4;
-  --secondary: #e6ebe9;
-  --secondary-foreground: #12312b;
-  --muted: #e6ebe9;
-  --muted-foreground: #56685f;
-  --accent: #e6ebe9;
-  --accent-foreground: #12312b;
-  --destructive: #b42318;
-  --border: #d9dedc; /* line */
-  --input: #c9d1ce;
-  --ring: #3b4cca;
-
-  --assistant: #3b4cca;
-  --assistant-foreground: #ffffff;
-  --assistant-soft: #e8eafb;
-  --best: #0f7b5f;
-  --best-soft: #dcf1ea;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f211d;
-    --foreground: #e3ebe8;
-    --card: #152d27;
-    --card-foreground: #e3ebe8;
-    --popover: #152d27;
-    --popover-foreground: #e3ebe8;
-    --primary: #e3ebe8;
-    --primary-foreground: #0f211d;
-    --secondary: #1d3832;
-    --secondary-foreground: #e3ebe8;
-    --muted: #1d3832;
-    --muted-foreground: #98aba5;
-    --accent: #1d3832;
-    --accent-foreground: #e3ebe8;
-    --destructive: #f97066;
-    --border: #27443d;
-    --input: #2f4f47;
-    --ring: #8d98f2;
-
-    --assistant: #8d98f2;
-    --assistant-foreground: #0f211d;
-    --assistant-soft: #232f63;
-    --best: #5ccfa8;
-    --best-soft: #173d33;
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
   }
 }
 
 @theme inline {
-  --font-sans: var(--font-public-sans);
-  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-geist-sans);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -90,11 +75,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-assistant: var(--assistant);
-  --color-assistant-foreground: var(--assistant-foreground);
-  --color-assistant-soft: var(--assistant-soft);
-  --color-best: var(--best);
-  --color-best-soft: var(--best-soft);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -109,10 +89,5 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-  }
-  h1,
-  h2,
-  h3 {
-    @apply font-display;
   }
 }

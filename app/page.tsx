@@ -25,23 +25,29 @@ import { getCatalog } from "./_lib/catalog";
 export default function CatalogPage({ searchParams }: PageProps<"/">) {
   return (
     <FiltersNavigationProvider>
-      <div className="mx-auto grid w-full max-w-[88rem] flex-1 gap-8 px-4 pt-8 pb-28 sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-8 lg:pb-10">
+      <header className="border-b">
+        <div className="mx-auto flex h-14 w-full max-w-[88rem] items-center px-4 sm:px-6 lg:px-8">
+          <span className="text-base font-semibold tracking-tight">
+            AI Shop Assistant
+          </span>
+        </div>
+      </header>
+      <div className="mx-auto grid w-full max-w-[88rem] flex-1 gap-8 px-4 pt-6 pb-28 sm:px-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:px-8 lg:pb-10">
         <main className="min-w-0">
-          <header className="mb-8 max-w-2xl">
-            <h1 className="text-4xl leading-none font-semibold tracking-tight [font-stretch:85%] sm:text-5xl">
-              AI Shop Assistant
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              All products
             </h1>
-            <p className="mt-3 text-base text-muted-foreground">
-              Tell the assistant what you&apos;re after. It sets the filters
-              below, and you can change any of them yourself.
+            <p className="mt-1 text-sm text-muted-foreground">
+              Filter by hand, or ask the assistant to do it for you.
             </p>
-          </header>
+          </div>
           {/* searchParams are request-time data: the shell prerenders, the catalog streams in. */}
           <Suspense fallback={<ProductGridSkeleton />}>
             <FilteredCatalog searchParams={searchParams} />
           </Suspense>
         </main>
-        <aside className="lg:sticky lg:top-6 lg:h-[calc(100dvh-3rem)] lg:self-start">
+        <aside className="lg:sticky lg:top-6 lg:h-[calc(100dvh-6.5rem)] lg:self-start">
           <ShopAssistant />
         </aside>
       </div>
