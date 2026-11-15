@@ -13,6 +13,7 @@ export {
   type IndexReport,
   indexProducts,
 } from "./api/product-indexer";
+export { createKeywordProductSearch } from "./api/keyword-product-search";
 export { createSearchHandler } from "./api/search-handler";
 export { searchQueries } from "./api/search-queries";
 export type {
@@ -20,6 +21,7 @@ export type {
   SearchHit,
   SearchOptions,
 } from "./model/product-search";
+export { withFallback } from "./model/fallback-search";
 export { relevantHits } from "./model/relevance";
 export {
   type Suggestion,
