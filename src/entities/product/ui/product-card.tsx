@@ -15,7 +15,17 @@ const usd = new Intl.NumberFormat("en-US", {
   currency: "USD",
 });
 
-export function ProductCard({ product }: { readonly product: Product }) {
+export interface ProductCardProps {
+  readonly product: Product;
+  readonly imageLoading?: "eager" | "lazy";
+  readonly highPriority?: boolean;
+}
+
+export function ProductCard({
+  product,
+  imageLoading = "lazy",
+  highPriority = false,
+}: ProductCardProps) {
   const titleId = `product-${String(product.id)}-title`;
   return (
     <article aria-labelledby={titleId} className="h-full">
@@ -25,6 +35,8 @@ export function ProductCard({ product }: { readonly product: Product }) {
             src={product.imageUrl}
             alt={product.title}
             fill
+            loading={imageLoading}
+            {...(highPriority && { fetchPriority: "high" })}
             sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 50vw"
             className="object-contain p-6 mix-blend-multiply dark:mix-blend-normal"
           />

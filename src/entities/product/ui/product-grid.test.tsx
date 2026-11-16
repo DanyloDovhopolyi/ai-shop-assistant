@@ -24,3 +24,31 @@ it("shows each product with its name, price, and rating", () => {
     within(phone).getByLabelText("Rated 4.3 out of 5"),
   ).toBeInTheDocument();
 });
+
+it("loads the first row eagerly and boosts only the first two images", () => {
+  render(
+    <ProductGrid
+      products={Array.from({ length: 6 }, (_, index) =>
+        makeProduct({ id: index + 1, title: `Product ${String(index + 1)}` }),
+      )}
+    />,
+  );
+
+  const images = screen.getAllByRole("img");
+  expect(images.map((image) => image.getAttribute("loading"))).toEqual([
+    "eager",
+    "eager",
+    "eager",
+    "eager",
+    "lazy",
+    "lazy",
+  ]);
+  expect(images.map((image) => image.getAttribute("fetchpriority"))).toEqual([
+    "high",
+    "high",
+    null,
+    null,
+    null,
+    null,
+  ]);
+});
