@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 
 import { Providers } from "./_components/providers";
@@ -13,6 +13,12 @@ export const metadata: Metadata = {
   title: "AI Shop Assistant",
   description:
     "A product catalog with an AI assistant that filters and sorts it from plain-language requests.",
+};
+
+// Lets the browser paint its own UI (canvas, scrollbars, form controls) in the
+// user's theme from the first frame, before the stylesheet loads.
+export const viewport: Viewport = {
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
